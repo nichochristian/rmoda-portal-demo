@@ -1,6 +1,7 @@
 import { api, DEMO, LEVELS, LEVEL_LABEL, buildPerms, acceptImports } from './api.js?v=45';
 import { viewWork } from './work.js?v=45';
 import { viewCrm } from './crm.js?v=42';
+import { viewAiOffice } from './ai-office.js?v=50';
 
 // Satu nomor versi untuk semua file, supaya browser tidak menyimpan salinan lama.
 const MV = 46;
@@ -35,6 +36,7 @@ const ICON = {
   audit: '<path d="M12 7v5l3 2"/><circle cx="12" cy="12" r="9"/>',
   export: '<path d="M12 3v12M7 10l5 5 5-5M4 21h16"/>',
   out: '<path d="M15 4h4v16h-4M10 8l-4 4 4 4M6 12h10"/>',
+  ai: '<circle cx="7" cy="8" r="2.2"/><circle cx="17" cy="8" r="2.2"/><circle cx="12" cy="16.5" r="2.2"/><path d="M8.8 9.4 11 14.2M15.2 9.4 13 14.2"/>',
 };
 const icon = (k) => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICON[k] || ''}</svg>`;
 
@@ -180,13 +182,16 @@ function brandNavHtml() {
   const items = b.items.filter(it => p.can(it.module));
   const adminView = p.can('admin', null, 'view');
   return `${navLink('beranda', 'home', 'Beranda')}
-    <p class="nav__h">${esc(b.name)}</p>
+    <p class="nav__h">Tools admin</p>
+    <p class="nav__sub">${esc(b.name)}</p>
     ${items.map(it => navLink(it.href, it.icon, it.label)).join('') || '<p class="nav__empty">Belum ada modul</p>'}
     ${adminView ? `<p class="nav__h">Kelola</p>
       ${navLink('tim', 'admin', 'Tim &amp; Peran')}
       ${navLink('peran', 'roles', 'Daftar Peran')}
       ${navLink('undangan', 'invite', 'Undangan &amp; Impor')}
-      ${p.owner ? navLink('aktivitas', 'audit', 'Aktivitas') + navLink('export', 'export', 'Export data') : ''}` : ''}`;
+      ${p.owner ? navLink('aktivitas', 'audit', 'Aktivitas') + navLink('export', 'export', 'Export data') : ''}` : ''}
+    <p class="nav__h nav__space">AI Office</p>
+    ${navLink('ai-office', 'ai', 'AI Office')}`;
 }
 function paintBrandBtn() {
   const b = currentBrand();
@@ -243,6 +248,19 @@ function paletteEntries() {
       rows.push({ group: b.name, label: it.label, hint: b.name, href: '#/' + it.href, brand: b.id, key: (b.name + ' ' + it.label + ' ' + b.line).toLowerCase() });
     }
   }
+  [
+    ['', 'Overview', 'ringkasan sapaan'],
+    ['ceo', 'CEO Check', 'keputusan approval'],
+    ['jadwal', 'Jadwal mingguan', 'kalender reels'],
+    ['funnel', 'Funnel', 'reach daftar kelas'],
+    ['insights', 'IG Insights', 'instagram followers'],
+    ['konten', 'Konten saya', 'pipeline kanban'],
+    ['tim', 'Tim', 'expi mars somia'],
+    ['chat', 'Chat AI Office', 'perintah instruksi'],
+  ].forEach(([sub, label, extra]) => rows.push({
+    group: 'AI Office', label, hint: 'AI Office', href: '#/ai-office' + (sub ? '/' + sub : ''),
+    key: ('ai office ' + label + ' ' + extra + ' expi flexo rmo cuy').toLowerCase(),
+  }));
   if (p.can('admin', null, 'view')) {
     rows.push({ group: 'Kelola', label: 'Tim & Peran', hint: 'Pengguna', href: '#/tim', brand: S.brand, key: 'tim peran pengguna' });
     rows.push({ group: 'Kelola', label: 'Daftar Peran', hint: 'Izin', href: '#/peran', brand: S.brand, key: 'peran izin' });
@@ -429,7 +447,7 @@ function route() {
   closeSide();
   closeBrandPop();
   const [page, arg] = h.split('/');
-  const views = { beranda: viewHome, m: viewModule, tim: viewMembers, peran: viewRoles, undangan: viewImports, aktivitas: viewAudit, export: viewExport };
+  const views = { beranda: viewHome, m: viewModule, tim: viewMembers, peran: viewRoles, undangan: viewImports, aktivitas: viewAudit, export: viewExport, 'ai-office': (sub) => viewAiOffice({ $, esc, setHead }, sub) };
   const view = $('#view');
   if (view) view.classList.remove('is-in');
   (views[page] || viewHome)(arg);
@@ -492,6 +510,7 @@ async function viewHome() {
         <h3 class="home-h">Langkah cepat</h3>
         <div class="quick">
           ${actions.map(it => `<a href="#/${it.href}">${icon(it.icon)}<span><b>${esc(it.label)}</b><small>Buka modul</small></span></a>`).join('')}
+          <a href="#/ai-office">${icon('ai')}<span><b>AI Office</b><small>Perintah ke PM, mode demo</small></span></a>
           ${brand.id === 'rmoda' && p.can('work') ? `<button type="button" id="homeNew">${icon('work')}<span><b>Mobil baru</b><small>Catat di papan, tombol C</small></span></button>` : ''}
           <button type="button" id="homeSearch">${icon('docs')}<span><b>Cari modul</b><small>${KBD}</small></span></button>
           ${brand.id === 'rmoda' && p.can('admin', null, 'view') ? `<a href="#/tim">${icon('admin')}<span><b>Tim</b><small id="qMembers">Pengguna</small></span></a>` : ''}
