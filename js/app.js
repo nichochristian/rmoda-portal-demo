@@ -1,7 +1,7 @@
 import { api, DEMO, LEVELS, LEVEL_LABEL, buildPerms, acceptImports } from './api.js?v=45';
 import { viewWork } from './work.js?v=45';
 import { viewCrm } from './crm.js?v=42';
-import { viewAiOffice } from './ai-office.js?v=49';
+import { viewAiOffice } from './ai-office.js?v=50';
 
 // Satu nomor versi untuk semua file, supaya browser tidak menyimpan salinan lama.
 const MV = 46;
@@ -248,7 +248,19 @@ function paletteEntries() {
       rows.push({ group: b.name, label: it.label, hint: b.name, href: '#/' + it.href, brand: b.id, key: (b.name + ' ' + it.label + ' ' + b.line).toLowerCase() });
     }
   }
-  rows.push({ group: 'AI Office', label: 'AI Office', hint: 'Perintah ke PM', href: '#/ai-office', key: 'ai office kantor perintah rmo expi flexo cuy agent' });
+  [
+    ['', 'Overview', 'ringkasan sapaan'],
+    ['ceo', 'CEO Check', 'keputusan approval'],
+    ['jadwal', 'Jadwal mingguan', 'kalender reels'],
+    ['funnel', 'Funnel', 'reach daftar kelas'],
+    ['insights', 'IG Insights', 'instagram followers'],
+    ['konten', 'Konten saya', 'pipeline kanban'],
+    ['tim', 'Tim', 'expi mars somia'],
+    ['chat', 'Chat AI Office', 'perintah instruksi'],
+  ].forEach(([sub, label, extra]) => rows.push({
+    group: 'AI Office', label, hint: 'AI Office', href: '#/ai-office' + (sub ? '/' + sub : ''),
+    key: ('ai office ' + label + ' ' + extra + ' expi flexo rmo cuy').toLowerCase(),
+  }));
   if (p.can('admin', null, 'view')) {
     rows.push({ group: 'Kelola', label: 'Tim & Peran', hint: 'Pengguna', href: '#/tim', brand: S.brand, key: 'tim peran pengguna' });
     rows.push({ group: 'Kelola', label: 'Daftar Peran', hint: 'Izin', href: '#/peran', brand: S.brand, key: 'peran izin' });
@@ -435,7 +447,7 @@ function route() {
   closeSide();
   closeBrandPop();
   const [page, arg] = h.split('/');
-  const views = { beranda: viewHome, m: viewModule, tim: viewMembers, peran: viewRoles, undangan: viewImports, aktivitas: viewAudit, export: viewExport, 'ai-office': () => viewAiOffice({ $, esc, setHead }) };
+  const views = { beranda: viewHome, m: viewModule, tim: viewMembers, peran: viewRoles, undangan: viewImports, aktivitas: viewAudit, export: viewExport, 'ai-office': (sub) => viewAiOffice({ $, esc, setHead }, sub) };
   const view = $('#view');
   if (view) view.classList.remove('is-in');
   (views[page] || viewHome)(arg);
