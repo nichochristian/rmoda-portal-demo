@@ -91,10 +91,9 @@ let ctx = null;
 
 const brandOf = (id) => BRANDS.find((b) => b.id === id) || BRANDS[0];
 const known = (id) => BRANDS.some((b) => b.id === id);
-const dark = () => document.documentElement.dataset.theme !== 'light';
 const word = (id) => {
   const row = WORDS[id];
-  return `<img data-word-for="${id}" src="${dark() ? row[1] : row[0]}" alt="${row[2]}">`;
+  return `<img class="ai-logo" src="${row[0]}" alt="${row[2]}">`;
 };
 const uid = () => (crypto.randomUUID ? crypto.randomUUID() : 'id' + Date.now());
 const read = (key) => {
@@ -338,7 +337,7 @@ function jadwal(esc) {
     const body = accounts.map((acc) => {
       const mine = items.filter((c) => c.account === acc);
       const short = acc === '@expcacademy.id' ? 'Academy' : 'Supplies';
-      return `<div class="ai-slot"><b title="${esc(acc)}">${short}</b>${mine.map((c) => `<p data-stage="${stageOf(c)}"><span>${esc(c.type)}</span> ${esc(STAGE[stageOf(c)].label)}</p>`).join('') || '<p class="muted">Kosong</p>'}</div>`;
+      return `<div class="ai-slot"><b title="${esc(acc)}">${short}</b>${mine.map((c) => `<p data-stage="${stageOf(c)}"><span>${esc(c.type)}</span> ${esc(stageOf(c) === 'approval' ? 'Approval Pak' : STAGE[stageOf(c)].label)}</p>`).join('') || '<p class="muted">Kosong</p>'}</div>`;
     }).join('');
     return `<section class="ai-day ${i === todayIndex() ? 'is-today' : ''}"><header>${dayName(i)}<small>${d.getDate()}</small></header>${body}</section>`;
   }).join('');
@@ -485,6 +484,15 @@ function paint() {
   const root = document.getElementById('view');
   if (!root) return;
   root.innerHTML = `<div class="ai-shell" id="aiShell">${side(esc)}<div class="ai-main">${main(esc)}</div></div>`;
+  root.querySelectorAll('.ai-nav').forEach((bar) => {
+    const on = bar.querySelector('a.on');
+    if (!on) return;
+    const pad = 28;
+    const left = on.offsetLeft;
+    const right = left + on.offsetWidth;
+    if (left < bar.scrollLeft + pad) bar.scrollLeft = Math.max(0, left - pad);
+    else if (right > bar.scrollLeft + bar.clientWidth - pad) bar.scrollLeft = right - bar.clientWidth + pad;
+  });
   bind();
 }
 

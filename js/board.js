@@ -75,6 +75,15 @@ export function mountBoard(ctx) {
     root.innerHTML = `${subnav()}<p class="board-note">${syncTxt}Kartu duduk di tahap pertama yang belum selesai. Garis merah = lewat target.</p>${body}`;
     const q = root.querySelector('#wtQ');
     if (q) q.oninput = () => { st.q = q.value; const pos = q.selectionStart; render(); const n = root.querySelector('#wtQ'); if (n) { n.focus(); n.setSelectionRange(pos, pos); } };
+    root.querySelectorAll('.wt-sub .wt-seg, .cmdbar .wt-seg').forEach((bar) => {
+      const on = bar.querySelector('[aria-pressed="true"]');
+      if (!on) return;
+      const pad = 20;
+      const left = on.offsetLeft;
+      const right = left + on.offsetWidth;
+      if (left < bar.scrollLeft + pad) bar.scrollLeft = Math.max(0, left - pad);
+      else if (right > bar.scrollLeft + bar.clientWidth - pad) bar.scrollLeft = right - bar.clientWidth + pad;
+    });
     if (st.open && st.view === 'papan') paintPeek(st.open, false);
   }
 
