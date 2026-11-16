@@ -1,10 +1,10 @@
 import { api, DEMO, LEVELS, LEVEL_LABEL, buildPerms, acceptImports } from './api.js?v=45';
 import { viewWork } from './work.js?v=45';
 import { viewCrm } from './crm.js?v=42';
-import { viewAiOffice } from './ai-office.js?v=50';
+import { viewAiOffice } from './ai-office.js?v=51';
 
 // Satu nomor versi untuk semua file, supaya browser tidak menyimpan salinan lama.
-const MV = 46;
+const MV = 51;
 const LAZY = {
   setoran: { view: 'viewSetoran', home: 'setoranHomeSummary', css: true },
   hrd:     { view: 'viewHrd',     home: 'hrdHomeSummary',     css: true },
@@ -501,7 +501,7 @@ async function viewHome() {
     <section class="today" id="today" aria-label="Hari ini">${skel}${skel}${skel}${skel}</section>
     <div class="home-grid">
       <section>
-        <h3 class="home-h">Perlu perhatian <span class="muted">J dan K untuk memilih</span></h3>
+        <h3 class="home-h">Perlu perhatian <span class="muted only-keys">J dan K untuk memilih</span></h3>
         <div class="issuelist" id="attnList"><div class="irow irow--skel"><span class="skel"></span></div><div class="irow irow--skel"><span class="skel"></span></div><div class="irow irow--skel"><span class="skel"></span></div></div>
       </section>
       <aside class="home-side">
