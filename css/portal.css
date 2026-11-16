@@ -261,10 +261,8 @@ body:has(.demo) .side { top: 33px; height: calc(100vh - 33px); }
 }
 .brandsw__btn:hover, .brandsw__btn[aria-expanded="true"] { background: var(--fill); border-color: var(--line); }
 .brandsw__logo {
-  width: 36px; height: 36px; object-fit: contain; border-radius: 9px; background: transparent;
-  box-shadow: inset 0 0 0 1px var(--line);
+  width: 36px; height: 36px; object-fit: contain; background: transparent;
 }
-.brandsw__logo.is-word { width: 36px; object-fit: cover; object-position: left center; background: #0a0a0a; }
 .brandsw__meta { min-width: 0; display: grid; gap: 1px; }
 .brandsw__meta b { font-size: 13.5px; font-weight: 580; letter-spacing: -0.02em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .brandsw__meta small { color: var(--ink-3); font-size: 11.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -825,7 +823,6 @@ tr.is-batal td:not(:last-child) { text-decoration: line-through; }
 .brandhead { display: flex; gap: 16px; align-items: center; padding-bottom: 4px; }
 .brandhead { align-items: flex-end; }
 .brandhead__word { height: 46px; width: auto; max-width: min(320px, 72vw); object-fit: contain; object-position: left center; flex: none; }
-html[data-theme="light"] .brandhead__word[data-word-for="rmoda"] { background: #111; border-radius: 8px; padding: 6px 8px; height: 40px; box-sizing: content-box; }
 .brandhead__kicker { margin: 0 0 2px; font-size: 12px; font-weight: 640; letter-spacing: 0.08em; text-transform: uppercase; color: var(--accent); }
 .brandhead h2 { font-size: clamp(28px, 3vw, 40px); letter-spacing: -0.045em; }
 .brandhead .muted { margin: 4px 0 0; }

@@ -1,7 +1,7 @@
 // Papan Work Tracker: tab divisi dan kolom tahap, gaya Linear.
 // Geser kartu tidak mengubah tahap. Tahap hanya lewat tombol Selesai / Lewati.
 
-import { DIVS, LOCS, UNIT_OF, woCode, coerceDiv, allows } from './rules.js?v=44';
+import { DIVS, LOCS, UNIT_OF, woCode, coerceDiv, allows } from './rules.js?v=45';
 
 const PRI = { TINGGI: ['bad', 'Tinggi'], SEDANG: ['warn', 'Sedang'], RINGAN: ['off', 'Ringan'] };
 const ROLE = { sa: 'Service Advisor', kabeng: 'Kepala Bengkel', kadiv: 'Kepala Divisi', owner: 'Owner' };

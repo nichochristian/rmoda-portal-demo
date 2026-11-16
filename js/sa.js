@@ -2,8 +2,8 @@
 // Rumus (total, diskon, pembayaran, status, kode WO, serah terima, WO belum dicek) disalin dari aplikasi supaya angkanya sama.
 // Data: app_docs app='sa' (trx, konf, katalog, pengaturan). RLS hanya memberi Owner dan peran Service Advisor.
 
-import * as Act from './sa-act.js?v=44';
-import { coerceDiv, bayarAktif } from './rules.js?v=44';
+import * as Act from './sa-act.js?v=45';
+import { coerceDiv, bayarAktif } from './rules.js?v=45';
 
 /* ---------------- util (sama dengan aplikasi) ---------------- */
 const num = v => { if (typeof v === 'number') return isFinite(v) ? v : 0; const n = Number(String(v ?? '').replace(/\./g, '').replace(',', '.').replace(/[^\d.-]/g, '')); return isFinite(n) ? n : 0; };

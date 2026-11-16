@@ -2,8 +2,8 @@
 // Hapus menjadi tanda Dibatalkan. Baris bayar berbukti tidak dihapus.
 // Batalkan baris pembayaran (v22) menandai Dibatalkan, tidak menghapus baris.
 
-import { LOCS, UNIT_OF, nextNum, fmtNo, woCode, coerceDiv, plateKey, nominalProblems, payJumlah, jobComplete, preserveSerah, bayarAktif } from './rules.js?v=44';
-import { docHtml, printHtml, downloadPdf } from './print-doc.js?v=44';
+import { LOCS, UNIT_OF, nextNum, fmtNo, woCode, coerceDiv, plateKey, nominalProblems, payJumlah, jobComplete, preserveSerah, bayarAktif } from './rules.js?v=45';
+import { docHtml, printHtml, downloadPdf } from './print-doc.js?v=45';
 
 const uid = () => (crypto.randomUUID ? crypto.randomUUID() : 'id' + Date.now());
 const today = () => new Date().toISOString().slice(0, 10);
@@ -109,7 +109,7 @@ export function buildDocModel(kind, t, no, opt = {}) {
     kind, no: docNo, title, tgl: tglId(tgl),
     entitas: entitas(t.lokasi),
     alamat,
-    logo: 'assets/rmoda-logo.png',
+    logo: 'assets/logo/rmoda-wordmark-onlight.png',
     trx: { kepada: t.kepada, kend: [t.kend?.merk, t.kend?.tipe].filter(Boolean).join(' '), plat: (t.kend?.plat || '').toUpperCase(), lokasi: t.lokasi, wo: woCode(t.kend?.plat, t.woTgl || t.wo?.tglTerima || tgl) },
     rows, totals, ket, ttd: t.sa || '',
   };

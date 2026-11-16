@@ -15,7 +15,7 @@ export function docHtml(model) {
 @page { size: A4 portrait; margin: 14mm; }
 html, body { margin: 0; color: #111; font: 12px/1.45 "Inter", system-ui, sans-serif; }
 .brandline { display: flex; gap: 12px; align-items: flex-start; }
-.brandline img { height: 42px; width: auto; background: #111; }
+.brandline img { height: 42px; width: auto; }
 .addr { white-space: pre-line; margin: 4px 0 0; }
 .kop h1 { font-size: 18px; margin: 10px 0 0; }
 .docno, .doctgl { margin: 2px 0; }
@@ -138,7 +138,6 @@ export async function downloadPdf(model, filename) {
     if (model._logo) {
       const h = 36;
       const w = Math.min(220, model._logo.width * (h / model._logo.height));
-      page.drawRectangle({ x: margin, y: y - h + 8, width: w, height: h, color: PDFLib.rgb(0.07, 0.07, 0.08) });
       page.drawImage(model._logo, { x: margin, y: y - h + 8, width: w, height: h });
       y -= h + 10;
     }

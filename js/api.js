@@ -1,7 +1,7 @@
 // Lapisan data portal. Dua mode:
 //  - Supabase (produksi): data di database, akses dikunci Row Level Security.
 //  - Demo: data contoh di localStorage browser ini, untuk mencoba tampilan.
-import { demoDocs, demoSyncAt, demoSaveDoc, demoSources, demoSetSource } from './demo-docs.js?v=44';
+import { demoDocs, demoSyncAt, demoSaveDoc, demoSources, demoSetSource } from './demo-docs.js?v=45';
 // Pendaftaran publik dimatikan. Tidak ada signUp. Akun baru hanya lewat undangan owner.
 const CFG = window.PORTAL_CONFIG || {};
 export const DEMO = !CFG.SUPABASE_URL || !CFG.SUPABASE_ANON_KEY;

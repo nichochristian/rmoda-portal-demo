@@ -1,5 +1,5 @@
 // Modul Work Tracker. Tulis hanya lewat saklar sumber, atau di mode demo.
-import { acceptedSerah, bayarAktif } from './rules.js?v=44';
+import { acceptedSerah, bayarAktif } from './rules.js?v=45';
 // Bagian Service Advisor (js/sa.js) dimuat saat tombol "Service Advisor" dibuka.
 
 /* Ringkasan pembayaran & konfirmasi per kartu (sama dengan RMODA_PAY / payOfJob / konfOfJob di aplikasi) */

@@ -1,5 +1,5 @@
-import { api, DEMO, LEVELS, LEVEL_LABEL, buildPerms, acceptImports } from './api.js?v=44';
-import { viewWork } from './work.js?v=44';
+import { api, DEMO, LEVELS, LEVEL_LABEL, buildPerms, acceptImports } from './api.js?v=45';
+import { viewWork } from './work.js?v=45';
 import { viewCrm } from './crm.js?v=42';
 
 // Satu nomor versi untuk semua file, supaya browser tidak menyimpan salinan lama.
@@ -42,7 +42,7 @@ const S = { me: null, perms: null, ref: null, brand: 'rmoda' };
 
 /* Empat brand. Warna aksen dipasang lewat data-brand di <html>. */
 const BRANDS = [
-  { id: 'rmoda', name: 'RMODA Studio', line: 'Detailing, coating, PPF, bodywork', branches: 'BSD · Legok · Makassar', logo: 'assets/rmoda-logo.png', wordmark: 'assets/rmoda-logo.png', compactCrop: true, expc: '',
+  { id: 'rmoda', name: 'RMODA Studio', line: 'Detailing, coating, PPF, bodywork', branches: 'BSD · Legok · Makassar', logo: 'assets/logo/rmoda-mark.png', wordmark: 'assets/logo/rmoda-wordmark-onlight.png', wordmarkDark: 'assets/logo/rmoda-wordmark-ondark.png', expc: '',
     items: [
       { href: 'm/work', route: 'm/work', icon: 'work', label: 'Work Tracker', module: 'work' },
       { href: 'm/work/sa', route: 'm/work/sa', icon: 'sa', label: 'Service Advisor', module: 'work' },
@@ -50,11 +50,11 @@ const BRANDS = [
       { href: 'm/setoran', route: 'm/setoran', icon: 'setoran', label: 'Setoran', module: 'setoran' },
       { href: 'm/hrd', route: 'm/hrd', icon: 'hrd', label: 'HRD', module: 'hrd' },
     ] },
-  { id: 'supplies', name: 'EXPC Supplies', line: 'Stok, invoice, dan tagihan distributor', branches: 'Gudang & penjualan', logo: 'assets/brands/expc-supplies.png', wordmark: 'assets/brands/expc-supplies-wordmark.png', wordmarkDark: 'assets/brands/expc-supplies-wordmark-ondark.png', expc: 'sup',
+  { id: 'supplies', name: 'EXPC Supplies', line: 'Stok, invoice, dan tagihan distributor', branches: 'Gudang & penjualan', logo: 'assets/logo/expc-supplies-mark.png', wordmark: 'assets/logo/expc-supplies-wordmark-onlight.png', wordmarkDark: 'assets/logo/expc-supplies-wordmark-ondark.png', expc: 'sup',
     items: [{ href: 'm/expc', route: 'm/expc', icon: 'expc', label: 'EXPC Supplies', module: 'expc' }] },
-  { id: 'academy', name: 'EXPC Academy', line: 'Kelas detailing dan invoice academy', branches: 'Kelas', logo: 'assets/brands/expc-academy.png', wordmark: 'assets/brands/expc-academy-wordmark-black.png', wordmarkDark: 'assets/brands/expc-academy-wordmark-white.png', expc: 'aca',
+  { id: 'academy', name: 'EXPC Academy', line: 'Kelas detailing dan invoice academy', branches: 'Kelas', logo: 'assets/logo/expc-academy-mark-onlight.png', logoDark: 'assets/logo/expc-academy-mark-ondark.png', wordmark: 'assets/logo/expc-academy-wordmark-onlight.png', wordmarkDark: 'assets/logo/expc-academy-wordmark-ondark.png', expc: 'aca',
     items: [{ href: 'm/expc', route: 'm/expc', icon: 'expc', label: 'EXPC Academy', module: 'expc' }] },
-  { id: 'proflex', name: 'Proflex', line: 'Stok film PPF, invoice, dan pelanggan', branches: 'Film & grafik', logo: 'assets/brands/proflex.png', logoDark: 'assets/brands/proflex-ondark.png', wordmark: 'assets/brands/proflex-wordmark.png', wordmarkDark: 'assets/brands/proflex-wordmark-ondark.png', expc: '',
+  { id: 'proflex', name: 'Proflex', line: 'Stok film PPF, invoice, dan pelanggan', branches: 'Film & grafik', logo: 'assets/logo/proflex-mark-onlight.png', logoDark: 'assets/logo/proflex-mark-ondark.png', wordmark: 'assets/logo/proflex-wordmark-onlight.png', wordmarkDark: 'assets/logo/proflex-wordmark-ondark.png', expc: '',
     items: [{ href: 'm/proflex', route: 'm/proflex', icon: 'proflex', label: 'Proflex', module: 'proflex' }] },
 ];
 const brandById = (id) => BRANDS.find(b => b.id === id) || BRANDS[0];
@@ -148,7 +148,7 @@ function renderLogin() {
   <div class="center login">
     <div class="login__photo" aria-hidden="true"><p>RMODA Studio · BSD · Legok · Makassar</p></div>
     <div class="login__panel">
-      <img class="login__logo" src="assets/rmoda-logo.png" alt="RMODA Studio">
+      <img class="login__logo" src="assets/logo/rmoda-wordmark-ondark.png" alt="RMODA Studio">
       <p class="login__kicker">Portal internal</p>
       <h1>Masuk untuk tim bengkel</h1>
       <p class="muted">Portal internal untuk staf. Tidak ada pendaftaran sendiri. Masuk dengan akun Google yang sudah diundang.</p>
@@ -194,7 +194,6 @@ function paintBrandBtn() {
   if (!img) return;
   img.src = brandLogo(b);
   img.alt = b.name;
-  img.classList.toggle('is-word', !!b.compactCrop);
   $('#brandName').textContent = b.name;
   $('#brandLine').textContent = b.branches;
   const k = $('#kicker'); if (k && !$('#title').textContent) k.textContent = b.name;
@@ -298,7 +297,7 @@ function renderShell() {
     <aside class="side" id="side">
       <div class="brandsw">
         <button type="button" class="brandsw__btn" id="brandBtn" aria-haspopup="listbox" aria-expanded="false" aria-label="Pilih brand">
-          <img class="brandsw__logo${b.compactCrop ? ' is-word' : ''}" id="brandLogo" data-logo-for="${b.id}" src="${brandLogo(b)}" alt="${esc(b.name)}">
+          <img class="brandsw__logo" id="brandLogo" data-logo-for="${b.id}" src="${brandLogo(b)}" alt="${esc(b.name)}">
           <span class="brandsw__meta"><b id="brandName">${esc(b.name)}</b><small id="brandLine">${esc(b.branches)}</small></span>
           <svg class="brandsw__chev" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><path d="M4 6l4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
         </button>

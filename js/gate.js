@@ -2,8 +2,8 @@
 // Mode demo selalu boleh menulis ke data contoh di browser.
 // Portal sungguhan hanya menulis bila Owner sudah menyalakan portal_is_source untuk app itu.
 
-import { DEMO } from './api.js?v=44';
-import { allows, actorFromMember, PREVIEW } from './rules.js?v=44';
+import { DEMO } from './api.js?v=45';
+import { allows, actorFromMember, PREVIEW } from './rules.js?v=45';
 
 const PREVIEW_KEY = 'rmoda-lihat-sebagai';
 
