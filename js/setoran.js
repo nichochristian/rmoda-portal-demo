@@ -142,7 +142,7 @@ export async function viewSetoran(ctx) {
       ${ulang.length ? `<p class="note">${ulang.length} setoran diminta foto ulang dan belum diganti.</p>` : ''}
       ${(() => { const n = D.minta.filter(m => !((D.peran.find(p => p.id === m.id) || {}).roles || []).filter(r => ROLES[r]).length).length; return owner && n ? `<p class="note">${n} orang baru menunggu diberi peran di aplikasi Claude.</p>` : ''; })()}
       <h2 class="wt-h">Per lokasi</h2>
-      <div class="tablewrap"><table class="tbl"><thead><tr><th>Lokasi</th>${hasAll ? '<th>Setoran baru</th>' : ''}<th>Invoice belum lunas</th><th>Konfirmasi menunggu</th><th>Stok perlu order</th><th>Barang keluar hari ini</th><th>Spot check minggu ini</th><th>Opname bulanan</th></tr></thead><tbody>
+      <div class="tablewrap"><table class="tbl st-sum"><thead><tr><th>Lokasi</th>${hasAll ? '<th title="Setoran baru">Setoran</th>' : ''}<th title="Invoice belum lunas">Invoice</th><th title="Konfirmasi menunggu">Konfirmasi</th><th title="Stok perlu order">Stok</th><th title="Barang keluar hari ini">Keluar</th><th title="Spot check minggu ini">Spot check</th><th title="Opname bulanan">Opname</th></tr></thead><tbody>
       ${L.map(c => {
         const g = gudang(c), m = op.meta[c];
         const b = belum.filter(u => u.cabang === c), bt = b.filter(u => telat(u, today)).length;

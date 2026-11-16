@@ -362,10 +362,11 @@ body:has(.demo) .top { top: 33px; }
 
 .tablewrap { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; overflow: auto; min-width: 0; max-width: 100%; scrollbar-width: thin; }
 .tbl { width: 100%; border-collapse: collapse; }
+.tbl.st-sum th { font-size: 10.5px; letter-spacing: 0.02em; line-height: 1.2; white-space: normal; padding: 8px 8px; }
 .tbl th {
   text-align: left; font-size: 11px; font-weight: 580; letter-spacing: 0.06em; text-transform: uppercase;
   color: var(--ink-3); padding: 11px 14px; border-bottom: 1px solid var(--line); background: var(--th-bg);
-  white-space: normal; line-height: 1.25; position: sticky; top: 0;
+  white-space: nowrap; position: sticky; top: 0;
 }
 .tbl td { padding: 12px 14px; border-bottom: 1px solid var(--line); vertical-align: top; }
 .tbl tr:last-child td { border-bottom: 0; }
@@ -1093,6 +1094,7 @@ html[data-theme="light"] .palette { background: color-mix(in srgb, #1a1814 38%, 
 .ai-navh { margin: 10px 10px 0; font-size: 11px; font-weight: 640; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-3); }
 .ai-count { min-width: 18px; height: 18px; padding: 0 5px; border-radius: 999px; background: #9f1239; color: #fff; font-size: 11px; font-weight: 700; display: inline-grid; place-items: center; }
 .ai-count.is-zero { background: var(--fill-strong); color: var(--ink); }
+.ai-nav a.ai-chatlink, .ai-nav a.ai-m { display: none; }
 .ai-ready { display: grid; gap: 8px; margin-top: 8px; padding: 12px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); }
 .ai-ready p { margin: 0; font-size: 13px; }
 .ai-main { display: grid; gap: 14px; min-width: 0; }
@@ -1194,9 +1196,9 @@ html[data-theme="light"] .palette { background: color-mix(in srgb, #1a1814 38%, 
   .ai-nav { display: flex; gap: 6px; overflow-x: auto; }
   .ai-nav a { flex: none; min-height: 44px; background: var(--fill); }
   .ai-switch button, .ai-check__go .btn, .ai-ask .btn { min-height: 44px; }
-  .ai-ready { position: fixed; z-index: 34; right: 12px; bottom: calc(72px + env(safe-area-inset-bottom)); width: auto; margin: 0; padding: 0; border: 0; background: transparent; }
-  .ai-ready p { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
-  .ai-ready .btn { min-height: 40px; border-radius: 999px; padding: 0 14px; box-shadow: var(--shadow); }
+  .ai-navh, .ai-nav-work, .ai-ready { display: none; }
+  .ai-nav a.ai-m { display: inline-flex; }
+  .ai-nav a.ai-chatlink { display: inline-flex; align-items: center; flex: none; min-height: 44px; padding: 0 12px; border-radius: 8px; background: var(--accent); color: var(--accent-ink); font-weight: 640; }
   .ai-hello, .ai-metrics, .ai-check, .ai-funnel li { grid-template-columns: 1fr; }
   .ai-hello h2 { white-space: normal; }
   .ai-metrics { grid-template-columns: 1fr 1fr; }
