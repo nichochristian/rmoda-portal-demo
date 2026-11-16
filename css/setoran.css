@@ -1,0 +1,3 @@
+/* Modul Setoran: baris judul grup (tanggal · lokasi) di tabel setoran */
+.wt-tbl tbody tr.st-grp { cursor: default; background: var(--sunk); }
+.wt-tbl tbody tr.st-grp td { padding-top: 8px; padding-bottom: 8px; }

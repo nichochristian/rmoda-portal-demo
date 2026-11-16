@@ -1,0 +1,25 @@
+/* Modul EXPC: tambahan kecil di atas portal.css */
+.ex-head { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; justify-content: space-between; }
+.tbl td.ex-n, .tbl th.ex-n { text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.ex-grid2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 14px; align-items: start; }
+.ex-grid2 > section { display: grid; gap: 8px; min-width: 0; }
+.ex-sku { font: 500 12px/1.3 ui-monospace, "SF Mono", Menlo, monospace; color: var(--ink-2); }
+.ex-in { color: var(--ok); } .ex-out { color: var(--red); }
+.ex-tot { display: grid; grid-template-columns: auto auto; gap: 4px 18px; justify-content: end; font-size: 14px; }
+.ex-tot span:nth-child(odd) { color: var(--ink-2); }
+.ex-tot span:nth-child(even) { text-align: right; font-variant-numeric: tabular-nums; }
+.ex-tot b { font-size: 16px; }
+.ex-more { justify-self: start; border: 1px solid var(--line); background: var(--surface); border-radius: 2px; padding: 6px 12px; cursor: pointer; }
+.ex-own { font-size: 11px; font-weight: 600; padding: 1px 7px; border-radius: 2px; background: #1b1c21; color: #fdd205; margin-left: 6px; vertical-align: middle; }
+/* menu tambahan (Barang Keluar, Pengeluaran, Laporan, Laba Rugi, Konfirmasi, dll.) */
+#exSub:empty { display: none; }
+.ex-sub { justify-self: start; max-width: 100%; }
+.ex-bar { display: inline-block; width: 110px; max-width: 100%; height: 8px; border-radius: 999px; background: var(--sunk); overflow: hidden; vertical-align: middle; }
+.ex-bar i { display: block; height: 100%; border-radius: inherit; background: var(--info); }
+.ex-bar.bad i { background: var(--red); }
+.tbl.ex-lr td.ex-lr-sub { padding-left: 22px; color: var(--ink-2); }
+.tbl.ex-lr tr.ex-lr-b td { font-weight: 600; }
+.tbl.ex-lr tr.ex-lr-total td { font-weight: 700; font-size: 16px; border-top: 2px solid var(--ink); }
+.ex-clamp { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; max-width: 46ch; }
+.ex-pre { white-space: pre-wrap; }
+.tbl tr[data-set], .tbl tr[data-buy], .tbl tr[data-bun], .tbl tr[data-exp], .tbl tr[data-op], .tbl tr[data-konf], .tbl tr[data-scw] { cursor: pointer; }
