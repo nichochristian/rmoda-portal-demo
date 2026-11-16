@@ -203,9 +203,9 @@ function side(esc) {
   const brands = BRANDS.map((x) => `<button type="button" data-brand="${x.id}" aria-pressed="${x.id === b.id}">${esc(x.name)}</button>`).join('');
   return `<aside class="ai-side">
     <div class="ai-switch" role="group" aria-label="Pilih brand">${brands}</div>
-    <nav class="ai-nav" aria-label="Menu AI Office">${NAV.map(link).join('')}</nav>
+    <nav class="ai-nav" aria-label="Menu AI Office">${NAV.map(link).join('')}${WORK.map(([id, label]) => link([id, label]).replace('class="', 'class="ai-m ')).join('')}<a class="ai-chatlink${st.view === 'chat' ? ' on' : ''}" href="#/ai-office/chat"${st.view === 'chat' ? ' aria-current="page"' : ''}>Buka chat</a></nav>
     <p class="ai-navh">AI Workspace</p>
-    <nav class="ai-nav" aria-label="AI Workspace">${WORK.map(link).join('')}</nav>
+    <nav class="ai-nav ai-nav-work" aria-label="AI Workspace">${WORK.map(link).join('')}</nav>
     <div class="ai-ready">
       <p>${b.live ? 'Tim AI siap. Tanya progres atau kirim instruksi ke Expi dan tim.' : `Ruang ${esc(b.name)} masih segera. Perintah demo bisa diantri untuk ${esc(b.pm)}.`}</p>
       <a class="btn btn--primary" href="#/ai-office/chat">Buka chat</a>

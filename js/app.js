@@ -1,10 +1,10 @@
 import { api, DEMO, LEVELS, LEVEL_LABEL, buildPerms, acceptImports } from './api.js?v=45';
 import { viewWork } from './work.js?v=45';
 import { viewCrm } from './crm.js?v=42';
-import { viewAiOffice } from './ai-office.js?v=51';
+import { viewAiOffice } from './ai-office.js?v=52';
 
 // Satu nomor versi untuk semua file, supaya browser tidak menyimpan salinan lama.
-const MV = 51;
+const MV = 52;
 const LAZY = {
   setoran: { view: 'viewSetoran', home: 'setoranHomeSummary', css: true },
   hrd:     { view: 'viewHrd',     home: 'hrdHomeSummary',     css: true },
