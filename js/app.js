@@ -1,10 +1,10 @@
 import { api, DEMO, LEVELS, LEVEL_LABEL, buildPerms, acceptImports } from './api.js?v=45';
 import { viewWork } from './work.js?v=45';
 import { viewCrm } from './crm.js?v=42';
-import { viewAiOffice } from './ai-office.js?v=52';
+import { viewAiOffice } from './ai-office.js?v=53';
 
 // Satu nomor versi untuk semua file, supaya browser tidak menyimpan salinan lama.
-const MV = 52;
+const MV = 53;
 const LAZY = {
   setoran: { view: 'viewSetoran', home: 'setoranHomeSummary', css: true },
   hrd:     { view: 'viewHrd',     home: 'hrdHomeSummary',     css: true },
@@ -190,8 +190,8 @@ function brandNavHtml() {
       ${navLink('peran', 'roles', 'Daftar Peran')}
       ${navLink('undangan', 'invite', 'Undangan &amp; Impor')}
       ${p.owner ? navLink('aktivitas', 'audit', 'Aktivitas') + navLink('export', 'export', 'Export data') : ''}` : ''}
-    <p class="nav__h nav__space">AI Office</p>
-    ${navLink('ai-office', 'ai', 'AI Office')}`;
+    <p class="nav__h nav__space">Kantor AI</p>
+    ${navLink('ai-office', 'ai', 'Kantor AI')}`;
 }
 function paintBrandBtn() {
   const b = currentBrand();
@@ -249,17 +249,13 @@ function paletteEntries() {
     }
   }
   [
-    ['', 'Overview', 'ringkasan sapaan'],
-    ['ceo', 'CEO Check', 'keputusan approval'],
-    ['jadwal', 'Jadwal mingguan', 'kalender reels'],
-    ['funnel', 'Funnel', 'reach daftar kelas'],
-    ['insights', 'IG Insights', 'instagram followers'],
-    ['konten', 'Konten saya', 'pipeline kanban'],
-    ['tim', 'Tim', 'expi mars somia'],
-    ['chat', 'Chat AI Office', 'perintah instruksi'],
+    ['', 'Beranda Kantor AI', 'ringkasan'],
+    ['alur', 'Alur konten', 'papan ide produksi'],
+    ['kalender', 'Kalender', 'minggu iklan'],
+    ['setuju', 'Perlu persetujuan', 'approval pak'],
   ].forEach(([sub, label, extra]) => rows.push({
-    group: 'AI Office', label, hint: 'AI Office', href: '#/ai-office' + (sub ? '/' + sub : ''),
-    key: ('ai office ' + label + ' ' + extra + ' expi flexo rmo cuy').toLowerCase(),
+    group: 'Kantor AI', label, hint: 'Kantor AI', href: '#/ai-office' + (sub ? '/' + sub : ''),
+    key: ('kantor ai ' + label + ' ' + extra + ' expi rmo academy supplies makassar').toLowerCase(),
   }));
   if (p.can('admin', null, 'view')) {
     rows.push({ group: 'Kelola', label: 'Tim & Peran', hint: 'Pengguna', href: '#/tim', brand: S.brand, key: 'tim peran pengguna' });
@@ -510,7 +506,7 @@ async function viewHome() {
         <h3 class="home-h">Langkah cepat</h3>
         <div class="quick">
           ${actions.map(it => `<a href="#/${it.href}">${icon(it.icon)}<span><b>${esc(it.label)}</b><small>Buka modul</small></span></a>`).join('')}
-          <a href="#/ai-office">${icon('ai')}<span><b>AI Office</b><small>Perintah ke PM, mode demo</small></span></a>
+          <a href="#/ai-office">${icon('ai')}<span><b>Kantor AI</b><small>Pantau dan setujui</small></span></a>
           ${brand.id === 'rmoda' && p.can('work') ? `<button type="button" id="homeNew">${icon('work')}<span><b>Mobil baru</b><small>Catat di papan, tombol C</small></span></button>` : ''}
           <button type="button" id="homeSearch">${icon('docs')}<span><b>Cari modul</b><small>${KBD}</small></span></button>
           ${brand.id === 'rmoda' && p.can('admin', null, 'view') ? `<a href="#/tim">${icon('admin')}<span><b>Tim</b><small id="qMembers">Pengguna</small></span></a>` : ''}

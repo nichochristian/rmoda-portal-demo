@@ -1,189 +1,176 @@
-// AI Office demo. Satu pintu pengirim: sendCommand.
+// Kantor AI demo. Satu pintu pengirim: sendCommand.
 // Demo hanya menulis antrian di localStorage. Tidak ada fetch, webhook, atau key.
 
 const KEY = 'rmoda-portal-ai-commands';
-const DEC_KEY = 'rmoda-portal-ai-decisions';
-const EXTRA_KEY = 'rmoda-portal-ai-extra';
+const WORK_KEY = 'rmoda-portal-ai-work';
 const ACCEPT_MS = 2000;
 const DONE_MS = 4500;
 const KEEP = 40;
 
-const WORDS = {
-  rmoda: ['assets/logo/rmoda-wordmark-onlight.png', 'assets/logo/rmoda-wordmark-ondark.png', 'RMODA Studio'],
-  supplies: ['assets/logo/expc-supplies-wordmark-onlight.png', 'assets/logo/expc-supplies-wordmark-ondark.png', 'EXPC Supplies'],
-  academy: ['assets/logo/expc-academy-wordmark-onlight.png', 'assets/logo/expc-academy-wordmark-ondark.png', 'EXPC Academy'],
-  proflex: ['assets/logo/proflex-wordmark-onlight.png', 'assets/logo/proflex-wordmark-ondark.png', 'Proflex'],
+const AGENTS = {
+  mars: { name: 'Mars', role: 'Riset dan ide', initials: 'Ma', a: '#f6e2b8', b: '#e2b15a' },
+  somia: { name: 'Somia', role: 'Kalender', initials: 'So', a: '#d7f0e4', b: '#7dcbab' },
+  kata: { name: 'Kata', role: 'Tulisan dan script', initials: 'Ka', a: '#f3e7c2', b: '#d4b45c' },
+  vira: { name: 'Vira', role: 'Edit video', initials: 'Vi', a: '#d9e4f8', b: '#8eaae0' },
+  grady: { name: 'Grady', role: 'Desain', initials: 'Gr', a: '#f8d7e4', b: '#e09ab8' },
+  expi: { name: 'Expi', role: 'Pengatur EXPC', initials: 'Ex', a: '#f6d0cb', b: '#e08b84' },
+  rmo: { name: 'Rmo', role: 'Pengatur RMODA', initials: 'Rm', a: '#f8d0cc', b: '#e7a19c' },
+  lapangan: { name: 'Tim lapangan', role: 'Take video', initials: 'TL', a: '#e4dfd6', b: '#b7b0a4' },
 };
+
+const STEPS = {
+  1: 'Riset Meta Ads',
+  2: 'Analisa Meta Ads',
+  3: 'Ide iklan',
+  4: 'Ide konten',
+  5: 'Kalender konten',
+  6: 'Isi konten',
+  7: 'Script video',
+  8: 'Take video',
+  9: 'Edit video',
+  10: 'Desain',
+  11: 'Approval Pak',
+  12: 'Jadwal tayang',
+};
+
+const GROUPS = [
+  ['riset', 'Riset & Ide'],
+  ['produksi', 'Produksi'],
+  ['approval', 'Approval'],
+  ['tayang', 'Tayang'],
+];
+const GROUP_OF = (step) => (step <= 4 ? 'riset' : step <= 10 ? 'produksi' : step === 11 ? 'approval' : 'tayang');
+
+const STATUS = {
+  belum: 'Belum mulai',
+  kerja: 'Dikerjakan',
+  tunggu: 'Menunggu Pak',
+  revisi: 'Revisi',
+  selesai: 'Selesai',
+};
+
+const NAV = [
+  ['', 'Beranda'],
+  ['alur', 'Alur konten'],
+  ['kalender', 'Kalender'],
+  ['setuju', 'Perlu persetujuan'],
+];
 
 const BRANDS = [
-  { id: 'expc', name: 'EXPC', pm: 'Expi', line: 'Academy dan Supplies', live: true, logos: ['academy', 'supplies'] },
-  { id: 'rmoda', name: 'RMODA Studio', pm: 'Rmo', line: 'Produksi bengkel', live: false, logos: ['rmoda'] },
-  { id: 'proflex', name: 'Proflex', pm: 'Flexo', line: 'Film dan grafik', live: false, logos: ['proflex'] },
-  { id: 'cuy', name: 'Cuy', pm: 'Cuy', line: 'Keuangan dan teknologi', live: false, logos: [] },
+  { id: 'academy', name: 'EXPC Academy', pm: 'Expi', live: true },
+  { id: 'supplies', name: 'EXPC Supplies', pm: 'Expi', live: true },
+  { id: 'rmoda', name: 'RMODA Studio', pm: 'Rmo', live: true, locs: ['BSD', 'Legok', 'Makassar'] },
 ];
 
-const STAGES = [
-  ['ide', 'Ide', 'Mars'],
-  ['kalender', 'Kalender', 'Somia'],
-  ['script', 'Isi & Script', 'Kata'],
-  ['take', 'Take video', 'Tim lapangan'],
-  ['edit', 'Edit', 'Vira'],
-  ['desain', 'Desain', 'Grady'],
-  ['approval', 'Antrian approval Pak', 'Pak Nicholas'],
-  ['posting', 'Posting', 'Somia'],
-];
+const job = (brand, n, row) => ({ id: brand + '-' + n, brand, kind: 'konten', day: 0, copy: '', script: '', ...row });
 
-const STAGE = Object.fromEntries(STAGES.map(([id, label, pic]) => [id, { label, pic }]));
+const DATA = {
+  academy: [
+    job('aca', 1, { title: 'Riset iklan kelas coating', step: 1, status: 'kerja', due: '18 Nov', agent: 'mars', day: 0, kind: 'iklan', copy: 'Contoh riset. Orang mencari kelas coating. Banyak yang tanya harga dan lama belajar.' }),
+    job('aca', 2, { title: 'Analisa iklan minggu lalu', step: 2, status: 'selesai', due: '16 Nov', agent: 'mars', day: 0, kind: 'iklan', copy: 'Contoh. Iklan Reels dilihat banyak orang, yang daftar masih sedikit.' }),
+    job('aca', 3, { title: 'Ide konten before after murid', step: 4, status: 'belum', due: '19 Nov', agent: 'mars', day: 1, kind: 'konten', copy: 'Contoh ide. Bandingkan mobil sebelum dan sesudah latihan murid.' }),
+    job('aca', 4, { title: 'Kalender konten minggu ini', step: 5, status: 'kerja', due: '17 Nov', agent: 'somia', day: 1, kind: 'konten', copy: 'Contoh. Senin Reels, Rabu Feed, Jumat Story.' }),
+    job('aca', 5, { title: 'Caption Reels 3 kesalahan coating', step: 6, status: 'kerja', due: '18 Nov', agent: 'kata', day: 2, kind: 'konten', copy: 'Contoh caption. Tiga kesalahan saat coating, lalu ajakan ikut kelas praktik.' }),
+    job('aca', 6, { title: 'Script cara daftar kelas', step: 7, status: 'kerja', due: '19 Nov', agent: 'kata', day: 3, kind: 'konten', script: 'Contoh script. Hook: mau coating rapi? Lalu tiga langkah daftar. Tutup dengan ajakan hari ini.' }),
+    job('aca', 7, { title: 'Footage kelas batch', step: 8, status: 'belum', due: '20 Nov', agent: 'lapangan', day: 3, kind: 'konten', copy: 'Tim lapangan belum mengunggah rekaman. Contoh.' }),
+    job('aca', 8, { title: 'Edit Reels kesalahan coating', step: 9, status: 'kerja', due: '20 Nov', agent: 'vira', day: 4, kind: 'konten', copy: 'Contoh. Video dipotong di bawah 30 detik, teks besar di awal.' }),
+    job('aca', 9, { title: 'Thumbnail kelas 3 hari', step: 10, status: 'kerja', due: '20 Nov', agent: 'grady', day: 4, kind: 'konten', copy: 'Contoh. Gambar judul kelas, wajah tidak dipakai.' }),
+    job('aca', 10, { title: 'Story pengumuman kelas', step: 11, status: 'tunggu', due: '21 Nov', agent: 'expi', day: 5, kind: 'konten', copy: 'Kelas coating batch contoh dibuka. Mohon dilihat Pak sebelum tayang.' }),
+    job('aca', 11, { title: 'Reels ajakan daftar kelas', step: 11, status: 'tunggu', due: '21 Nov', agent: 'expi', day: 5, kind: 'iklan', copy: 'Daftar kelas 3 hari. Tempat terbatas. Contoh iklan untuk disetujui.', script: 'Teks di layar: Daftar hari ini.' }),
+    job('aca', 12, { title: 'Feed reminder kelas', step: 12, status: 'selesai', due: '16 Nov', agent: 'somia', day: 6, kind: 'konten', copy: 'Sudah masuk jadwal tayang. Contoh.' }),
+  ],
+  supplies: [
+    job('sup', 1, { title: 'Riset iklan film PPF', step: 1, status: 'kerja', due: '18 Nov', agent: 'mars', day: 0, kind: 'iklan', copy: 'Contoh. Pembeli mencari film PPF dan harga per meter.' }),
+    job('sup', 2, { title: 'Ide konten unboxing roll', step: 4, status: 'belum', due: '19 Nov', agent: 'mars', day: 1, kind: 'konten' }),
+    job('sup', 3, { title: 'Kalender produk minggu ini', step: 5, status: 'kerja', due: '17 Nov', agent: 'somia', day: 1, kind: 'konten', copy: 'Contoh. Feed katalog, Reels unboxing, Story stok.' }),
+    job('sup', 4, { title: 'Caption katalog film PPF', step: 6, status: 'kerja', due: '18 Nov', agent: 'kata', day: 2, kind: 'konten', copy: 'Contoh caption. Jenis film, kegunaan, dan ajakan cek stok.' }),
+    job('sup', 5, { title: 'Script unboxing 20 detik', step: 7, status: 'kerja', due: '19 Nov', agent: 'kata', day: 2, kind: 'konten', script: 'Contoh script. Buka roll, sebut nama film, tutup dengan stok ready.' }),
+    job('sup', 6, { title: 'Edit video unboxing', step: 9, status: 'kerja', due: '20 Nov', agent: 'vira', day: 4, kind: 'konten' }),
+    job('sup', 7, { title: 'Gambar katalog film', step: 10, status: 'kerja', due: '20 Nov', agent: 'grady', day: 4, kind: 'konten' }),
+    job('sup', 8, { title: 'Iklan stok film PPF', step: 11, status: 'tunggu', due: '21 Nov', agent: 'expi', day: 5, kind: 'iklan', copy: 'Stok film PPF ready. Contoh teks iklan, mohon disetujui Pak.' }),
+    job('sup', 9, { title: 'Story stok ready', step: 12, status: 'selesai', due: '16 Nov', agent: 'somia', day: 6, kind: 'konten', copy: 'Sudah dijadwalkan. Contoh.' }),
+  ],
+  'rmoda-Makassar': [
+    job('mks', 1, { title: 'Riset iklan coating Makassar', step: 1, status: 'kerja', due: '18 Nov', agent: 'mars', day: 0, kind: 'iklan', copy: 'Contoh. Orang di Makassar mencari coating dan PPF untuk mobil harian.' }),
+    job('mks', 2, { title: 'Analisa iklan PPF sekitar Makassar', step: 2, status: 'selesai', due: '16 Nov', agent: 'mars', day: 0, kind: 'iklan', copy: 'Contoh. Iklan yang langsung sebut kota dan hasil lebih sering diklik.' }),
+    job('mks', 3, { title: 'Ide iklan PPF full body Makassar', step: 3, status: 'kerja', due: '18 Nov', agent: 'mars', day: 1, kind: 'iklan', copy: 'Contoh ide. Mobil kota, PPF full body, ajakan chat.' }),
+    job('mks', 4, { title: 'Kalender iklan minggu ini', step: 5, status: 'kerja', due: '17 Nov', agent: 'somia', day: 1, kind: 'iklan', copy: 'Contoh. Dua iklan Meta dan satu story promo.' }),
+    job('mks', 5, { title: 'Copy iklan Meta coating Makassar', step: 6, status: 'kerja', due: '18 Nov', agent: 'kata', day: 2, kind: 'iklan', copy: 'Coating di Makassar. Hasil lebih rapi, booking minggu ini. Contoh.' }),
+    job('mks', 6, { title: 'Script 15 detik PPF Makassar', step: 7, status: 'kerja', due: '19 Nov', agent: 'kata', day: 2, kind: 'iklan', script: 'Contoh. Mobil masuk bengkel. PPF dipasang. Teks: PPF full body Makassar. Ajak chat.' }),
+    job('mks', 7, { title: 'Footage mobil customer Makassar', step: 8, status: 'belum', due: '20 Nov', agent: 'lapangan', day: 3, kind: 'iklan' }),
+    job('mks', 8, { title: 'Edit iklan PPF Makassar', step: 9, status: 'kerja', due: '20 Nov', agent: 'vira', day: 4, kind: 'iklan', copy: 'Contoh. Potongan 15 detik, kota disebut di detik pertama.' }),
+    job('mks', 9, { title: 'Gambar iklan coating Makassar', step: 10, status: 'kerja', due: '20 Nov', agent: 'grady', day: 4, kind: 'iklan', copy: 'Contoh. Judul besar, nama kota, tanpa wajah orang.' }),
+    job('mks', 10, { title: 'Iklan Meta coating Makassar', step: 11, status: 'tunggu', due: '21 Nov', agent: 'rmo', day: 5, kind: 'iklan', copy: 'Coating Makassar, ajakan chat WA. Contoh iklan, mohon disetujui Pak.', script: 'Teks: Coating Makassar. Booking minggu ini.' }),
+    job('mks', 11, { title: 'Iklan PPF full body Makassar', step: 11, status: 'tunggu', due: '21 Nov', agent: 'rmo', day: 5, kind: 'iklan', copy: 'PPF full body untuk mobil harian Makassar. Contoh, mohon dilihat Pak.' }),
+    job('mks', 12, { title: 'Story promo akhir pekan', step: 12, status: 'selesai', due: '16 Nov', agent: 'somia', day: 6, kind: 'konten', copy: 'Sudah masuk jadwal tayang. Contoh.' }),
+  ],
+  'rmoda-BSD': [
+    job('bsd', 1, { title: 'Riset iklan coating BSD', step: 1, status: 'kerja', due: '18 Nov', agent: 'mars', day: 0, kind: 'iklan', copy: 'Contoh. Pencarian coating di BSD ramai di sore hari.' }),
+    job('bsd', 2, { title: 'Copy iklan Meta coating BSD', step: 6, status: 'kerja', due: '19 Nov', agent: 'kata', day: 2, kind: 'iklan', copy: 'Coating di bengkel BSD. Contoh ajakan booking.' }),
+    job('bsd', 3, { title: 'Edit iklan BSD', step: 9, status: 'kerja', due: '20 Nov', agent: 'vira', day: 4, kind: 'iklan' }),
+    job('bsd', 4, { title: 'Iklan Meta coating BSD', step: 11, status: 'tunggu', due: '21 Nov', agent: 'rmo', day: 5, kind: 'iklan', copy: 'Contoh iklan jual coating BSD. Mohon disetujui Pak.' }),
+  ],
+  'rmoda-Legok': [
+    job('lgk', 1, { title: 'Riset iklan PPF Legok', step: 1, status: 'kerja', due: '18 Nov', agent: 'mars', day: 0, kind: 'iklan', copy: 'Contoh. Pemilik mobil di Legok bertanya PPF harian.' }),
+    job('lgk', 2, { title: 'Script iklan PPF Legok', step: 7, status: 'kerja', due: '19 Nov', agent: 'kata', day: 2, kind: 'iklan', script: 'Contoh. Sebut Legok di awal, lalu hasil PPF, lalu ajakan datang.' }),
+    job('lgk', 3, { title: 'Iklan PPF Legok', step: 11, status: 'tunggu', due: '21 Nov', agent: 'rmo', day: 5, kind: 'iklan', copy: 'Contoh iklan PPF Legok untuk disetujui Pak.' }),
+    job('lgk', 4, { title: 'Story hasil PPF', step: 12, status: 'selesai', due: '16 Nov', agent: 'somia', day: 6, kind: 'konten', copy: 'Sudah dijadwalkan. Contoh.' }),
+  ],
+};
 
-const BASE = [
-  { id: 'c1', title: 'Reels: ide tips ceramic', type: 'Reels', account: '@expcacademy.id', stage: 'ide', day: 0 },
-  { id: 'c2', title: 'Feed: before after poles', type: 'Feed', account: '@expcacademy.id', stage: 'kalender', day: 1 },
-  { id: 'c3', title: 'Reels: unboxing film PPF', type: 'Reels', account: 'EXPC Supplies', stage: 'script', day: 2, script: 'Hook: roll baru masuk. Tiga kalimat manfaat, lalu ajakan cek katalog. Caption contoh, belum final.' },
-  { id: 'c4', title: 'Story: behind kelas', type: 'Story', account: '@expcacademy.id', stage: 'take', day: 1, late: true },
-  { id: 'c5', title: 'Reels: 3 kesalahan coating', type: 'Reels', account: '@expcacademy.id', stage: 'edit', day: 3 },
-  { id: 'c6', title: 'Feed: katalog film PPF', type: 'Feed', account: 'EXPC Supplies', stage: 'desain', day: 3 },
-  { id: 'c7', title: 'Story: kelas batch contoh', type: 'Story', account: '@expcacademy.id', stage: 'approval', day: 4 },
-  { id: 'c8', title: 'Reels: cara daftar kelas', type: 'Reels', account: '@expcacademy.id', stage: 'approval', day: 4 },
-  { id: 'c9', title: 'Feed: stok ready', type: 'Feed', account: 'EXPC Supplies', stage: 'posting', day: 5 },
-  { id: 'c10', title: 'Story: reminder kelas', type: 'Story', account: '@expcacademy.id', stage: 'posting', day: 6 },
-];
-
-const TEAM = [
-  { id: 'expi', name: 'Expi', role: 'Manager / PM EXPC', tint: '#f0b4ae', out: 14, done: 11, week: 7, hours: 1, last: 'Menyatukan urutan approval minggu ini.', tasks: ['Memeriksa semua pekerjaan tim, siap atau belum.', 'Menandai konten yang masih menunggu Pak.', 'Mengecek caption Supplies sebelum posting.'] },
-  { id: 'mars', name: 'Mars', role: 'Marketing Strategist', tint: '#f3d7a1', out: 9, done: 6, week: 4, hours: 5, last: 'Mengusulkan angle Reels tips ceramic.', tasks: ['Menyusun ide konten kelas minggu ini.', 'Membandingkan strategi Academy dan Supplies.'] },
-  { id: 'somia', name: 'Somia', role: 'Social Media Manager', tint: '#b7dcc8', out: 16, done: 12, week: 8, hours: 3, last: 'Mengunci slot Reels Kamis di kalender.', tasks: ['Menyusun kalender konten mingguan dua akun.', 'Mengecek slot Story yang masih kosong.'] },
-  { id: 'kata', name: 'Kata', role: 'Copywriter', tint: '#ead9a2', out: 11, done: 8, week: 5, hours: 4, last: 'Menulis draf caption unboxing film PPF.', tasks: ['Mengisi caption Reels unboxing.', 'Merapikan script cara daftar kelas.'] },
-  { id: 'vira', name: 'Vira', role: 'Video Creator', tint: '#c5d4f2', out: 8, done: 5, week: 3, hours: 2, last: 'Memotong hook Reels 3 kesalahan coating.', tasks: ['Edit video Reels coating, durasi di bawah 30 detik.', 'Menunggu bahan Story behind kelas.'] },
-  { id: 'grady', name: 'Grady', role: 'Graphic Designer', tint: '#f0c3d4', out: 10, done: 7, week: 4, hours: 6, last: 'Menyusun thumbnail katalog film PPF.', tasks: ['Desain Feed katalog film PPF.', 'Siapkan thumbnail Reels yang sudah diedit.'] },
-  { id: 'econ', name: 'Econ', role: 'E-commerce Specialist', tint: '#c9e2c4', out: 7, done: 4, week: 3, hours: 20, last: 'Memperbarui judul listing Tokopedia contoh.', tasks: ['Menjaga listing Tokopedia dan marketplace EXPC Supplies.', 'Mencatat order contoh yang belum dibalas.'] },
-];
-
-const FUNNEL = [
-  ['Reach', 48200],
-  ['Engagement', 6100],
-  ['Profile visit', 2400],
-  ['DM/WA', 860],
-  ['Daftar kelas/Order', 74],
-];
-
-const REACH7 = [4200, 5100, 4800, 6300, 5900, 7100, 6800];
-const REACH30 = [3200, 2800, 4100, 3600, 4500, 3900, 5200, 4800, 4300, 6100, 5400, 4700, 6600, 5800, 5100, 7200, 6400, 5900, 6800, 6200, 5400, 7100, 6600, 6000, 7400, 6900, 6300, 7800, 7100, 6800];
-
-const VIEWS = ['overview', 'ceo', 'jadwal', 'funnel', 'insights', 'konten', 'tim', 'todo', 'script', 'editor', 'chat'];
-const NAV = [
-  ['overview', 'Overview'],
-  ['ceo', 'CEO Check'],
-  ['jadwal', 'Jadwal mingguan'],
-  ['funnel', 'Funnel'],
-  ['insights', 'IG Insights'],
-  ['konten', 'Konten saya'],
-];
-const WORK = [
-  ['tim', 'Tim'],
-  ['todo', 'To-do'],
-  ['script', 'Script'],
-  ['editor', 'Editor & Thumbnail'],
-];
-
-const st = { brand: 'expc', q: '', range: '7', newOpen: false };
-let timer = 0;
+const st = { brand: 'academy', loc: 'Makassar', view: '', drawer: '', revise: '' };
 let ctx = null;
+let timer = 0;
 
-const brandOf = (id) => BRANDS.find((b) => b.id === id) || BRANDS[0];
-const known = (id) => BRANDS.some((b) => b.id === id);
-const word = (id) => {
-  const row = WORDS[id];
-  return `<img class="ai-logo" src="${row[0]}" alt="${row[2]}">`;
-};
 const uid = () => (crypto.randomUUID ? crypto.randomUUID() : 'id' + Date.now());
-const read = (key) => {
-  try {
-    const raw = JSON.parse(localStorage.getItem(key) || '[]');
-    return raw;
-  } catch {
-    return key === DEC_KEY ? {} : [];
-  }
-};
-const weekMonday = () => {
-  const now = new Date();
-  const monday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  monday.setDate(monday.getDate() - ((monday.getDay() + 6) % 7));
-  return monday;
-};
-const dayName = (i) => ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu', 'Minggu'][i];
-const todayIndex = () => (new Date().getDay() + 6) % 7;
+const known = (id) => ['academy', 'supplies', 'rmoda', 'expc', 'proflex', 'cuy'].includes(id);
+const pmOf = () => (st.brand === 'rmoda' ? 'Rmo' : 'Expi');
+const dataKey = () => (st.brand === 'rmoda' ? 'rmoda-' + st.loc : st.brand);
 
-function contents() {
-  const extra = read(EXTRA_KEY);
-  const rows = Array.isArray(extra) ? extra.filter((x) => x && x.id && x.title && STAGE[x.stage]) : [];
-  return BASE.concat(rows);
+function readWork() {
+  try {
+    const raw = JSON.parse(localStorage.getItem(WORK_KEY) || '{}');
+    return raw && typeof raw === 'object' ? raw : {};
+  } catch {
+    return {};
+  }
 }
-function decisions() {
-  const raw = read(DEC_KEY);
-  return raw && typeof raw === 'object' && !Array.isArray(raw) ? raw : {};
+function saveWork(map) {
+  try { localStorage.setItem(WORK_KEY, JSON.stringify(map)); } catch { /* browser menolak */ }
 }
-function stageOf(item) {
-  const d = decisions()[item.id];
-  if (d === 'setuju') return 'posting';
-  if (d === 'revisi') return 'edit';
-  return item.stage;
+function tasks() {
+  const map = readWork();
+  return (DATA[dataKey()] || []).map((t) => ({ ...t, ...(map[t.id] || {}) }));
 }
 function waiting() {
-  return contents().filter((c) => stageOf(c) === 'approval');
-}
-function lateOnes() {
-  return contents().filter((c) => c.late && stageOf(c) !== 'posting');
-}
-function posted() {
-  return contents().filter((c) => stageOf(c) === 'posting');
-}
-function picOf(item) {
-  return STAGE[stageOf(item)].pic;
+  return tasks().filter((t) => t.status === 'tunggu');
 }
 
-function load() {
+function loadCmds() {
   try {
     const raw = JSON.parse(localStorage.getItem(KEY) || '[]');
-    return Array.isArray(raw) ? raw.filter((x) => x && known(x.brand) && typeof x.text === 'string' && x.createdAt) : [];
+    return Array.isArray(raw) ? raw.filter((x) => x && known(x.brand) && x.text && x.createdAt) : [];
   } catch {
     return [];
   }
 }
-
 export function commandStatus(item, now = Date.now()) {
   const age = now - Number(item.createdAt || 0);
   if (age >= DONE_MS) return 'Selesai';
   if (age >= ACCEPT_MS) return 'Diterima';
   return 'Antri';
 }
-
-// Nanti pengganti fungsi ini yang mengirim ke agent. Pemanggil UI tetap sama.
 export function sendCommand(brand, text) {
   const clean = String(text || '').replace(/\s+/g, ' ').trim().slice(0, 500);
   if (!clean) return Promise.resolve({ ok: false, error: 'Tulis perintah dulu.' });
   if (!known(brand)) return Promise.resolve({ ok: false, error: 'Brand tidak dikenal.' });
   const item = { id: uid(), brand, text: clean, createdAt: Date.now() };
-  try {
-    localStorage.setItem(KEY, JSON.stringify([item, ...load()].slice(0, KEEP)));
-  } catch {
-    return Promise.resolve({ ok: false, error: 'Browser menolak menyimpan antrian demo.' });
-  }
+  try { localStorage.setItem(KEY, JSON.stringify([item, ...loadCmds()].slice(0, KEEP))); }
+  catch { return Promise.resolve({ ok: false, error: 'Browser menolak menyimpan antrian demo.' }); }
   return Promise.resolve({ ok: true, item: { ...item, status: 'Antri' } });
 }
 
-const when = (ts) => new Date(ts).toLocaleString('id-ID', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
-const STCLS = { Antri: 'warn', Diterima: 'info', Selesai: 'ok' };
-const num = (n) => Number(n).toLocaleString('id-ID');
-
-function histHtml(esc, brand) {
-  const rows = load().filter((x) => x.brand === brand).slice(0, 6);
-  if (!rows.length) return '<p class="ai-empty">Belum ada perintah di browser ini.</p>';
-  return `<ol class="ai-hist">${rows.map((x) => {
-    const status = commandStatus(x);
-    return `<li><span class="ai-hist__top"><span class="badge ${STCLS[status]}">${status}</span><time datetime="${new Date(x.createdAt).toISOString()}">${esc(when(x.createdAt))}</time></span><p>${esc(x.text)}</p></li>`;
-  }).join('')}</ol>`;
-}
-
+const dayName = (i) => ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu', 'Minggu'][i];
 function greet() {
   const h = new Date().getHours();
   if (h < 11) return 'Selamat pagi';
@@ -191,234 +178,133 @@ function greet() {
   if (h < 18) return 'Selamat sore';
   return 'Selamat malam';
 }
+const avatar = (id) => {
+  const a = AGENTS[id] || AGENTS.lapangan;
+  return `<span class="kai-av" style="--a:${a.a};--b:${a.b}" title="${a.name}">${a.initials}</span>`;
+};
+const ico = (d) => `<svg viewBox="0 0 24 24" aria-hidden="true">${d}</svg>`;
+const ICO = {
+  home: ico('<path d="M4 11 12 4l8 7v8H4z"/><path d="M10 19v-5h4v5"/>'),
+  flow: ico('<path d="M4 7h6v4H4zM14 7h6v4h-6zM9 13h6v4H9z"/><path d="M7 11v2h5M17 11v2h-5"/>'),
+  cal: ico('<rect x="4" y="5" width="16" height="15" rx="2"/><path d="M8 3v4M16 3v4M4 10h16"/>'),
+  ok: ico('<circle cx="12" cy="12" r="8"/><path d="m8.5 12 2.2 2.2 4.8-5"/>'),
+};
 
 function side(esc) {
-  const b = brandOf(st.brand);
   const n = waiting().length;
-  const link = ([id, label]) => {
+  const links = NAV.map(([id, label]) => {
     const on = st.view === id;
-    const badge = id === 'ceo' ? `<span class="ai-count${n ? '' : ' is-zero'}">${n}</span>` : '';
-    return `<a href="#/ai-office${id === 'overview' ? '' : '/' + id}" class="${on ? 'on' : ''}" ${on ? 'aria-current="page"' : ''}>${esc(label)}${badge}</a>`;
-  };
-  const brands = BRANDS.map((x) => `<button type="button" data-brand="${x.id}" aria-pressed="${x.id === b.id}">${esc(x.name)}</button>`).join('');
-  return `<aside class="ai-side">
-    <div class="ai-switch" role="group" aria-label="Pilih brand">${brands}</div>
-    <nav class="ai-nav" aria-label="Menu AI Office">${NAV.map(link).join('')}${WORK.map(([id, label]) => link([id, label]).replace('class="', 'class="ai-m ')).join('')}<a class="ai-chatlink${st.view === 'chat' ? ' on' : ''}" href="#/ai-office/chat"${st.view === 'chat' ? ' aria-current="page"' : ''}>Buka chat</a></nav>
-    <p class="ai-navh">AI Workspace</p>
-    <nav class="ai-nav ai-nav-work" aria-label="AI Workspace">${WORK.map(link).join('')}</nav>
-    <div class="ai-ready">
-      <p>${b.live ? 'Tim AI siap. Tanya progres atau kirim instruksi ke Expi dan tim.' : `Ruang ${esc(b.name)} masih segera. Perintah demo bisa diantri untuk ${esc(b.pm)}.`}</p>
-      <a class="btn btn--primary" href="#/ai-office/chat">Buka chat</a>
-    </div>
-  </aside>`;
+    const icon = id === '' ? ICO.home : id === 'alur' ? ICO.flow : id === 'kalender' ? ICO.cal : ICO.ok;
+    const badge = id === 'setuju' ? `<span class="kai-count${n ? '' : ' is-zero'}">${n}</span>` : '';
+    return `<a href="#/ai-office${id ? '/' + id : ''}" class="${on ? 'on' : ''}"${on ? ' aria-current="page"' : ''}>${icon}<span>${esc(label)}</span>${badge}</a>`;
+  }).join('');
+  const pills = BRANDS.map((b) => `<button type="button" data-brand="${b.id}" aria-pressed="${st.brand === b.id}">${esc(b.name)}</button>`).join('')
+    + '<button type="button" disabled>Proflex · Segera</button>';
+  const locs = st.brand === 'rmoda'
+    ? `<div class="kai-locs" role="group" aria-label="Cabang">${['BSD', 'Legok', 'Makassar'].map((l) => `<button type="button" data-loc="${l}" aria-pressed="${st.loc === l}">${l}</button>`).join('')}</div>`
+    : '';
+  return `<aside class="ai-side"><div class="kai-pills" role="group" aria-label="Pilih brand">${pills}</div>${locs}<nav class="ai-nav" aria-label="Kantor AI">${links}</nav></aside>`;
 }
 
-function soon(esc, b) {
-  const logos = b.logos.map(word).join('');
-  return `<article class="ai-soon">
-    ${logos ? `<div class="ai-card__logos">${logos}</div>` : `<b class="ai-word">${esc(b.name)}</b>`}
-    <h2>${esc(b.name)}</h2>
-    <p>PM ${esc(b.pm)}. ${esc(b.line)}.</p>
-    <span class="badge warn">Segera</span>
-    <p class="muted">Ruang ini belum diisi. EXPC yang sudah bisa dicoba, dengan data contoh.</p>
-  </article>`;
+function cmdBar(esc) {
+  const who = pmOf();
+  const where = st.brand === 'rmoda' ? ' untuk ' + st.loc : '';
+  const last = loadCmds().find((x) => x.brand === (st.brand === 'rmoda' ? 'rmoda' : st.brand));
+  const chip = last ? commandStatus(last) : 'Demo';
+  return `<form class="kai-cmd" data-brand="${st.brand === 'rmoda' ? 'rmoda' : st.brand}">
+    <span class="kai-demo" id="kaiDemo">${esc(chip === 'Demo' ? 'Demo, belum terkirim' : chip)}</span>
+    <label class="kai-sr" for="kaiCmd">Perintah</label>
+    <input class="inp" id="kaiCmd" maxlength="500" placeholder="Beri perintah ke ${who}${where}..." aria-describedby="kaiDemo">
+    <button class="btn" type="submit">Kirim</button>
+  </form>`;
 }
 
-function piece(esc, item) {
-  const stage = stageOf(item);
-  return `<article class="ai-piece" data-stage="${stage}">
-    <b>${esc(item.title)}</b>
-    <small>${esc(item.type)} · ${esc(item.account)}</small>
-    <small>PIC ${esc(picOf(item))} · ${esc(STAGE[stage].label)}${item.late && stage !== 'posting' ? ' · telat' : ''}</small>
-  </article>`;
-}
-
-function overview(esc, b) {
-  const date = new Date().toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
-  const logos = b.logos.map(word).join('');
-  const metrics = [
+function home(esc) {
+  const list = tasks();
+  const nums = [
     [waiting().length, 'menunggu Pak'],
-    [contents().length, 'konten minggu ini'],
-    [lateOnes().length, 'telat'],
-    [posted().length, 'terposting'],
+    [list.filter((t) => t.status === 'kerja').length, 'sedang dikerjakan'],
+    [list.filter((t) => t.status === 'selesai').length, 'sudah selesai'],
   ];
-  return `<header class="ai-hello">
-      <div>
-        <h2>${greet()}, Pak Nicholas</h2>
-        <p class="muted">${esc(date)}</p>
-      </div>
-      <p class="ai-ig"><i></i> Terhubung ke Instagram @expcacademy.id <span class="badge off">contoh</span></p>
-    </header>
-    <section class="ai-hero">
-      <div class="ai-card__logos">${logos}</div>
-      <h3>EXPC</h3>
-      <p class="muted">Academy dan Supplies. Angka dan konten di bawah ini contoh.</p>
-      <div class="ai-hero__row">
-        <button type="button" class="btn btn--primary" id="aiNew">Buat proyek baru</button>
-        <form class="ai-ask" data-brand="expc">
-          <label for="aiAssist">AI Assistant</label>
-          <input class="inp" id="aiAssist" name="text" placeholder="Tanya Expi atau kirim instruksi" maxlength="500">
-          <button class="btn" type="submit">Kirim</button>
-        </form>
-      </div>
-      <form class="ai-new" id="aiNewForm" hidden>
-        <label for="aiTitle">Nama konten contoh</label>
-        <input class="inp" id="aiTitle" maxlength="80" placeholder="Misalnya Reels: tips baru">
-        <button class="btn btn--primary" type="submit">Simpan ke Ide</button>
-        <p class="ai-hint">Tersimpan di browser ini, tahap Ide, PIC Mars.</p>
-      </form>
-      <p class="ai-err" id="aiAskErr" hidden role="alert"></p>
-      <div data-live="expc">${histHtml(esc, 'expc')}</div>
-    </section>
-    <div class="ai-metrics">${metrics.map(([n, label]) => `<article class="ai-metric"><b>${n}</b><span>${esc(label)}</span><small>contoh</small></article>`).join('')}</div>`;
+  const people = st.brand === 'rmoda'
+    ? ['rmo', 'mars', 'somia', 'kata', 'vira', 'grady']
+    : ['expi', 'mars', 'somia', 'kata', 'vira', 'grady'];
+  const date = new Date().toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long' });
+  const place = st.brand === 'rmoda' ? 'RMODA ' + st.loc : BRANDS.find((b) => b.id === st.brand).name;
+  return `<header class="kai-hello"><p class="kai-kicker">${esc(place)}</p><h2>${greet()}, Pak Nicholas</h2><p class="muted">${esc(date)}. Angka di bawah ini contoh.</p></header>
+    <div class="kai-metrics">${nums.map(([n, l]) => `<article><b>${n}</b><span>${l}</span></article>`).join('')}</div>
+    <section class="kai-team"><h3>Tim yang mengerjakan</h3><ul>${people.map((id) => `<li>${avatar(id)}<span><b>${AGENTS[id].name}</b><small>${AGENTS[id].role}</small></span></li>`).join('')}<li>${avatar('lapangan')}<span><b>Tim lapangan</b><small>Take video</small></span></li></ul></section>
+    ${waiting().length ? '<a class="btn btn--primary kai-go" href="#/ai-office/setuju">Lihat persetujuan</a>' : '<p class="muted">Tidak ada yang menunggu persetujuan.</p>'}`;
 }
 
-function team(esc) {
-  const q = st.q.trim().toLowerCase();
-  const rows = TEAM.filter((a) => !q || (a.name + ' ' + a.role).toLowerCase().includes(q));
-  const card = (a) => {
-    const on = a.hours < 24 * 7;
-    const ago = a.hours < 1 ? 'baru saja' : a.hours < 24 ? a.hours + ' jam lalu' : Math.round(a.hours / 24) + ' hari lalu';
-    return `<article class="ai-agent" style="--tint:${a.tint}">
-      <header class="ai-agent__top">
-        <span class="ai-av" aria-hidden="true">${esc(a.name.slice(0, 2))}</span>
-        <div>
-          <h3>${esc(a.name)} <i class="ai-dot ${on ? '' : 'is-off'}" aria-hidden="true"></i> <span class="ai-state">${on ? 'Aktif' : 'Diam'}</span></h3>
-          <p>${esc(a.role)}</p>
-        </div>
-      </header>
-      <ul class="ai-tasks">${a.tasks.slice(0, 3).map((t) => `<li>${esc(t)}</li>`).join('')}</ul>
-      <dl class="ai-stat3">
-        <div><dt>output</dt><dd>${a.out}</dd></div>
-        <div><dt>selesai</dt><dd>${a.done}</dd></div>
-        <div><dt>7 hari</dt><dd>${a.week}</dd></div>
-      </dl>
-      <p class="ai-ago">Terakhir kerja: ${esc(ago)}</p>
-      <p class="ai-last"><b>Hasil terakhir.</b> ${esc(a.last)}</p>
-    </article>`;
-  };
-  return `<header class="ai-head">
-      <h2>Tim AI EXPC</h2>
-      <p class="muted">Expi dan tim, satu tempat. Titik hijau artinya aktif dalam 7 hari terakhir.</p>
-      <label class="ai-search">Cari agent<input class="inp" id="aiQ" value="${esc(st.q)}" placeholder="Nama atau peran"></label>
-    </header>
-    <div class="ai-agents">${rows.map(card).join('') || '<p class="ai-empty">Tidak ada agent yang cocok.</p>'}</div>`;
-}
-
-function kanban(esc) {
-  const cols = STAGES.map(([id, label]) => {
-    const items = contents().filter((c) => stageOf(c) === id);
-    return `<section class="ai-kcol"><header><b>${esc(label)}</b><span>${items.length}</span></header>${items.map((c) => piece(esc, c)).join('') || '<p class="ai-empty">Kosong</p>'}</section>`;
-  }).join('');
-  return `<header class="ai-head"><h2>Konten saya</h2><p class="muted">Alur rutin, data contoh. Tiap kartu menampilkan tahap dan PIC.</p></header><div class="ai-flow">${STAGES.map(([, label, pic]) => `<span>${esc(label)}<small>${esc(pic)}</small></span>`).join('')}</div><div class="ai-kanban">${cols}</div>`;
-}
-
-function ceo(esc) {
-  const wait = waiting();
-  const late = lateOnes();
-  const done = posted();
-  const row = (c, actions) => `<article class="ai-check">
-    <div><b>${esc(c.title)}</b><p class="muted">${esc(c.type)} · ${esc(c.account)} · PIC ${esc(picOf(c))}</p></div>
-    ${actions ? `<div class="ai-check__go"><button type="button" class="btn btn--primary" data-decide="setuju" data-id="${esc(c.id)}">Setujui</button><button type="button" class="btn" data-decide="revisi" data-id="${esc(c.id)}">Minta revisi</button></div>` : ''}
+function card(esc, t) {
+  const a = AGENTS[t.agent] || AGENTS.lapangan;
+  return `<article class="kai-card">
+    <header><b>${esc(t.title)}</b><span class="kai-step">${esc(STEPS[t.step] || '')}</span></header>
+    <p class="kai-who">${avatar(t.agent)}<span>${esc(a.name)}</span></p>
+    <p class="kai-meta"><span class="kai-st kai-st--${t.status}">${STATUS[t.status]}</span><span>Tenggat ${esc(t.due)}</span></p>
+    <button type="button" class="btn kai-look" data-open="${esc(t.id)}">Lihat hasil</button>
   </article>`;
-  return `<header class="ai-head"><h2>CEO Check</h2><p class="muted">Ringkas untuk Pak. Tombol hanya mengubah contoh di browser ini, tidak mengirim ke agent.</p></header>
-    <section class="ai-block"><h3>Menunggu keputusan <span class="ai-count">${wait.length}</span></h3>${wait.map((c) => row(c, true)).join('') || '<p class="ai-empty">Tidak ada yang menunggu.</p>'}</section>
-    <section class="ai-block"><h3>Telat</h3>${late.map((c) => row(c, false)).join('') || '<p class="ai-empty">Tidak ada yang telat.</p>'}</section>
-    <section class="ai-block"><h3>Hasil minggu ini</h3>${done.map((c) => row(c, false)).join('') || '<p class="ai-empty">Belum ada yang terposting.</p>'}</section>`;
 }
 
-function jadwal(esc) {
-  const monday = weekMonday();
-  const cols = Array.from({ length: 7 }, (_, i) => {
-    const d = new Date(monday);
-    d.setDate(monday.getDate() + i);
-    const items = contents().filter((c) => c.day === i);
-    const accounts = ['@expcacademy.id', 'EXPC Supplies'];
-    const body = accounts.map((acc) => {
-      const mine = items.filter((c) => c.account === acc);
-      const short = acc === '@expcacademy.id' ? 'Academy' : 'Supplies';
-      return `<div class="ai-slot"><b title="${esc(acc)}">${short}</b>${mine.map((c) => `<p data-stage="${stageOf(c)}"><span>${esc(c.type)}</span> ${esc(stageOf(c) === 'approval' ? 'Approval Pak' : STAGE[stageOf(c)].label)}</p>`).join('') || '<p class="muted">Kosong</p>'}</div>`;
-    }).join('');
-    return `<section class="ai-day ${i === todayIndex() ? 'is-today' : ''}"><header>${dayName(i)}<small>${d.getDate()}</small></header>${body}</section>`;
+function board(esc) {
+  const list = tasks();
+  const cols = GROUPS.map(([id, name]) => {
+    const items = list.filter((t) => GROUP_OF(t.step) === id);
+    return `<section class="kai-col"><header><b>${esc(name)}</b><span>${items.length}</span></header>${items.map((t) => card(esc, t)).join('') || '<p class="muted">Kosong</p>'}</section>`;
   }).join('');
-  return `<header class="ai-head"><h2>Jadwal mingguan</h2><p class="muted">Slot Reels, Feed, dan Story untuk @expcacademy.id (Academy) dan EXPC Supplies. Warna mengikuti tahap, nama tahap tetap tertulis. Data contoh.</p></header><div class="ai-week">${cols}</div>`;
+  return `<header class="kai-hello"><h2>Alur konten</h2><p class="muted">Empat bagian. Nama tahap ada di tiap kartu. Geser ke samping di HP.</p></header><div class="kai-board">${cols}</div>`;
 }
 
-function funnel(esc) {
-  const max = FUNNEL[0][1];
-  return `<header class="ai-head"><h2>Funnel</h2><p class="muted">Angka contoh, dari jangkauan sampai daftar kelas atau order.</p></header>
-    <ol class="ai-funnel">${FUNNEL.map(([label, n]) => `<li><span>${esc(label)}</span><i><b style="width:${Math.max(8, n / max * 100)}%"></b></i><strong>${num(n)}</strong><small>contoh</small></li>`).join('')}</ol>`;
+function calendar(esc) {
+  const list = tasks();
+  const days = Array.from({ length: 7 }, (_, i) => {
+    const items = list.filter((t) => t.day === i);
+    const body = items.map((t) => `<p class="kai-slot kai-slot--${t.status}"><b>${esc(t.kind === 'iklan' ? 'Iklan' : 'Konten')}</b> ${esc(t.title)}</p>`).join('') || '<p class="muted">Kosong</p>';
+    return `<section class="kai-day"><header>${dayName(i)}</header>${body}</section>`;
+  }).join('');
+  return `<header class="kai-hello"><h2>Kalender</h2><p class="muted">Minggu ini. Warna mengikuti status. Contoh.</p></header><div class="kai-week">${days}</div>`;
 }
 
-function insights(esc) {
-  const series = st.range === '30' ? REACH30 : REACH7;
-  const max = Math.max(...series);
-  const cards = [
-    ['Followers', '12.840'],
-    ['Reach', '48.200'],
-    ['Engagement rate', '3,4%'],
-    ['Top post', 'Reels: 3 kesalahan coating'],
-  ];
-  return `<header class="ai-head"><h2>IG Insights</h2><p class="muted">Akun contoh @expcacademy.id. Semua angka di halaman ini contoh.</p></header>
-    <div class="ai-metrics">${cards.map(([k, v]) => `<article class="ai-metric"><b>${esc(v)}</b><span>${esc(k)}</span><small>contoh</small></article>`).join('')}</div>
-    <section class="ai-block">
-      <div class="ai-head__row"><h3>Reach ${st.range} hari</h3><div class="ai-seg" role="group" aria-label="Rentang"><button type="button" data-range="7" aria-pressed="${st.range === '7'}">7 hari</button><button type="button" data-range="30" aria-pressed="${st.range === '30'}">30 hari</button></div></div>
-      <div class="ai-bars" aria-hidden="true">${series.map((n) => `<i style="--h:${Math.max(8, n / max * 100)}%"></i>`).join('')}</div>
-      <p class="ai-hint">Grafik contoh. Angka tertinggi ${num(max)}.</p>
-    </section>`;
+function approve(esc) {
+  const list = waiting();
+  const row = (t) => `<article class="kai-approve">
+    <div>${avatar(t.agent)}<div><b>${esc(t.title)}</b><p class="muted">${esc(STEPS[t.step])} · tenggat ${esc(t.due)}</p><p>${esc(t.copy || t.script || 'Belum ada hasil contoh.')}</p></div></div>
+    <div class="kai-actions">
+      <button type="button" class="btn btn--primary" data-yes="${esc(t.id)}">Setujui</button>
+      <button type="button" class="btn" data-no="${esc(t.id)}">Minta revisi</button>
+      ${st.revise === t.id ? `<label class="kai-note">Catatan<textarea class="inp" data-note="${esc(t.id)}" rows="2" maxlength="240" placeholder="Apa yang perlu diperbaiki?"></textarea><button type="button" class="btn" data-save="${esc(t.id)}">Simpan catatan</button></label>` : ''}
+    </div>
+  </article>`;
+  return `<header class="kai-hello"><h2>Perlu persetujuan</h2><p class="muted">Yang menunggu Pak. Setujui atau minta revisi. Perubahan hanya di browser ini.</p></header>
+    <div class="kai-list">${list.map(row).join('') || '<p class="kai-empty">Tidak ada yang menunggu.</p>'}</div>`;
 }
 
-function listPage(esc, title, sub, rows) {
-  return `<header class="ai-head"><h2>${esc(title)}</h2><p class="muted">${esc(sub)}</p></header><div class="ai-list">${rows.map((c) => piece(esc, c)).join('') || '<p class="ai-empty">Belum ada.</p>'}</div>`;
-}
-
-function todo(esc) {
-  return listPage(esc, 'To-do', 'Pekerjaan yang belum terposting. Data contoh.', contents().filter((c) => stageOf(c) !== 'posting'));
-}
-function script(esc) {
-  const rows = contents().filter((c) => c.script || stageOf(c) === 'script');
-  return `<header class="ai-head"><h2>Script</h2><p class="muted">Caption dan script dari Kata. Teks di bawah ini contoh.</p></header>
-    ${rows.map((c) => `<article class="ai-script"><h3>${esc(c.title)}</h3><p>${esc(c.script || 'Script belum ditulis. Masih di tahap ' + STAGE[stageOf(c)].label + '.')}</p><small>PIC ${esc(picOf(c))}</small></article>`).join('')}`;
-}
-function editor(esc) {
-  return listPage(esc, 'Editor & Thumbnail', 'Antrean edit Vira dan desain Grady. Data contoh.', contents().filter((c) => ['edit', 'desain'].includes(stageOf(c))));
-}
-
-function chat(esc, b) {
-  return `<header class="ai-head"><h2>Chat ${esc(b.pm)}</h2><p class="note" role="status">Mode demo. Perintah masuk antrian browser ini, belum terkirim ke agent sungguhan.</p></header>
-    <form class="ai-ask ai-ask--stack" data-brand="${b.id}">
-      <label for="aiChat">Beri perintah ke ${esc(b.pm)}</label>
-      <textarea class="inp" id="aiChat" name="text" rows="3" maxlength="500" placeholder="Tulis instruksi untuk ${esc(b.pm)}"></textarea>
-      <button class="btn btn--primary" type="submit">Kirim</button>
-      <p class="ai-err" hidden role="alert"></p>
-    </form>
-    <div data-live="${b.id}">${histHtml(esc, b.id)}</div>`;
-}
-
-function main(esc) {
-  const b = brandOf(st.brand);
-  if (!b.live && st.view !== 'chat') return soon(esc, b);
-  if (st.view === 'tim') return team(esc);
-  if (st.view === 'konten') return kanban(esc);
-  if (st.view === 'ceo') return ceo(esc);
-  if (st.view === 'jadwal') return jadwal(esc);
-  if (st.view === 'funnel') return funnel(esc);
-  if (st.view === 'insights') return insights(esc);
-  if (st.view === 'todo') return todo(esc);
-  if (st.view === 'script') return script(esc);
-  if (st.view === 'editor') return editor(esc);
-  if (st.view === 'chat') return chat(esc, b);
-  return overview(esc, b);
+function sheet(esc) {
+  const t = tasks().find((x) => x.id === st.drawer);
+  if (!t) return '';
+  const a = AGENTS[t.agent] || AGENTS.lapangan;
+  return `<div class="kai-shade" data-close="1"></div>
+    <aside class="kai-sheet" role="dialog" aria-modal="true" aria-label="Hasil">
+      <header><div><p class="kai-step">${esc(STEPS[t.step])}</p><h2>${esc(t.title)}</h2><p class="kai-who">${avatar(t.agent)}<span>${esc(a.name)} · ${STATUS[t.status]}</span></p></div><button type="button" class="iconbtn" data-close="1" aria-label="Tutup">×</button></header>
+      <div class="kai-ph" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="4" y="5" width="16" height="14" rx="2"/><path d="m8 15 3-3 2 2 3-4 2 5"/></svg><span>Contoh gambar</span></div>
+      ${t.copy ? `<section><h3>Teks</h3><p>${esc(t.copy)}</p></section>` : ''}
+      ${t.script ? `<section><h3>Script</h3><p>${esc(t.script)}</p></section>` : ''}
+      ${t.note ? `<section><h3>Catatan revisi</h3><p>${esc(t.note)}</p></section>` : ''}
+      ${!t.copy && !t.script ? '<p class="muted">Hasil contoh belum diisi untuk tugas ini.</p>' : ''}
+      ${t.status === 'tunggu' ? `<div class="kai-actions"><button type="button" class="btn btn--primary" data-yes="${esc(t.id)}">Setujui</button><button type="button" class="btn" data-no="${esc(t.id)}">Minta revisi</button></div>` : ''}
+    </aside>`;
 }
 
 function arm() {
   clearTimeout(timer);
-  const root = document.getElementById('aiShell');
-  if (!root) return;
-  if (!load().some((x) => commandStatus(x) !== 'Selesai')) return;
+  if (!document.getElementById('kaiShell') || !ctx) return;
+  const brand = st.brand === 'rmoda' ? 'rmoda' : st.brand;
+  if (!loadCmds().some((x) => x.brand === brand && commandStatus(x) !== 'Selesai')) return;
   timer = setTimeout(() => {
-    if (!document.getElementById('aiShell') || !ctx) return;
-    document.querySelectorAll('[data-live]').forEach((el) => { el.innerHTML = histHtml(ctx.esc, el.dataset.live); });
+    const el = document.getElementById('kaiDemo');
+    const last = loadCmds().find((x) => x.brand === brand);
+    if (el && last) el.textContent = commandStatus(last);
     arm();
   }, 500);
 }
@@ -426,78 +312,84 @@ function arm() {
 function bind() {
   const { esc } = ctx;
   const root = document.getElementById('view');
-  root.querySelectorAll('.ai-switch [data-brand]').forEach((btn) => {
-    btn.onclick = () => { st.brand = btn.dataset.brand; paint(); };
+  root.querySelectorAll('.kai-pills [data-brand]').forEach((btn) => {
+    btn.onclick = () => { st.brand = btn.dataset.brand; st.drawer = ''; st.revise = ''; paint(); };
   });
-  const q = root.querySelector('#aiQ');
-  if (q) q.oninput = () => { st.q = q.value; const pos = q.selectionStart; paint(); const n = document.querySelector('#aiQ'); if (n) { n.focus(); n.setSelectionRange(pos, pos); } };
-  const newer = root.querySelector('#aiNew');
-  if (newer) newer.onclick = () => { st.newOpen = !st.newOpen; const form = document.getElementById('aiNewForm'); if (form) form.hidden = !st.newOpen; };
-  const formNew = root.querySelector('#aiNewForm');
-  if (formNew) {
-    formNew.hidden = !st.newOpen;
-    formNew.onsubmit = (e) => {
-      e.preventDefault();
-      const title = formNew.querySelector('input').value.replace(/\s+/g, ' ').trim();
-      if (!title) return;
-      const day = todayIndex();
-      const extra = contents().filter((c) => !BASE.some((b) => b.id === c.id));
-      extra.push({ id: uid(), title, type: 'Reels', account: '@expcacademy.id', stage: 'ide', day });
-      try { localStorage.setItem(EXTRA_KEY, JSON.stringify(extra)); } catch { return; }
-      st.newOpen = false;
-      location.hash = '#/ai-office/konten';
-    };
-  }
-  root.querySelectorAll('.ai-ask').forEach((form) => {
-    form.onsubmit = async (e) => {
-      e.preventDefault();
-      const box = form.querySelector('input, textarea');
-      const err = form.querySelector('.ai-err') || document.getElementById('aiAskErr');
-      const res = await sendCommand(form.dataset.brand, box.value);
-      if (!res.ok) {
-        if (err) { err.hidden = false; err.textContent = res.error; }
-        return;
-      }
-      if (err) err.hidden = true;
-      box.value = '';
-      document.querySelectorAll(`[data-live="${form.dataset.brand}"]`).forEach((el) => { el.innerHTML = histHtml(esc, form.dataset.brand); });
-      arm();
-    };
+  root.querySelectorAll('[data-loc]').forEach((btn) => {
+    btn.onclick = () => { st.loc = btn.dataset.loc; st.drawer = ''; paint(); };
   });
-  root.querySelectorAll('[data-decide]').forEach((btn) => {
+  root.querySelectorAll('[data-open]').forEach((btn) => { btn.onclick = () => { st.drawer = btn.dataset.open; paint(); }; });
+  root.querySelectorAll('[data-close]').forEach((btn) => { btn.onclick = () => { st.drawer = ''; paint(); }; });
+  root.querySelectorAll('[data-yes]').forEach((btn) => {
     btn.onclick = () => {
-      const map = decisions();
-      map[btn.dataset.id] = btn.dataset.decide;
-      try { localStorage.setItem(DEC_KEY, JSON.stringify(map)); } catch { return; }
+      const map = readWork();
+      map[btn.dataset.yes] = { status: 'selesai', step: 12 };
+      saveWork(map);
+      st.drawer = '';
       paint();
     };
   });
-  root.querySelectorAll('[data-range]').forEach((btn) => {
-    btn.onclick = () => { st.range = btn.dataset.range; paint(); };
+  root.querySelectorAll('[data-no]').forEach((btn) => {
+    btn.onclick = () => {
+      st.revise = btn.dataset.no;
+      st.drawer = '';
+      if (location.hash !== '#/ai-office/setuju') location.hash = '#/ai-office/setuju';
+      else paint();
+    };
+  });
+  root.querySelectorAll('[data-save]').forEach((btn) => {
+    btn.onclick = () => {
+      const box = root.querySelector(`[data-note="${btn.dataset.save}"]`);
+      const note = (box?.value || '').replace(/\s+/g, ' ').trim();
+      if (!note) return;
+      const map = readWork();
+      map[btn.dataset.save] = { status: 'revisi', note };
+      saveWork(map);
+      st.revise = '';
+      paint();
+    };
+  });
+  const form = root.querySelector('.kai-cmd');
+  if (form) {
+    form.onsubmit = async (e) => {
+      e.preventDefault();
+      const box = form.querySelector('input');
+      const res = await sendCommand(form.dataset.brand, box.value);
+      const demo = document.getElementById('kaiDemo');
+      if (!res.ok) { if (demo) demo.textContent = res.error; return; }
+      box.value = '';
+      if (demo) demo.textContent = 'Antri';
+      arm();
+    };
+  }
+  root.querySelectorAll('.ai-nav').forEach((bar) => {
+    const on = bar.querySelector('a.on');
+    if (!on || bar.scrollWidth <= bar.clientWidth + 2) return;
+    const fade = 40;
+    const view = bar.clientWidth;
+    const max = Math.max(0, bar.scrollWidth - view);
+    const navLeft = bar.getBoundingClientRect().left;
+    const rect = on.getBoundingClientRect();
+    const itemLeft = rect.left - navLeft + bar.scrollLeft;
+    let target = itemLeft - fade;
+    if (itemLeft + rect.width - target > view - fade) target = itemLeft + rect.width - (view - fade);
+    bar.scrollLeft = Math.max(0, Math.min(max, target));
   });
   arm();
 }
 
 function paint() {
   const { esc, setHead } = ctx;
-  setHead('AI Office');
+  setHead('Kantor AI');
   const root = document.getElementById('view');
   if (!root) return;
-  root.innerHTML = `<div class="ai-shell" id="aiShell">${side(esc)}<div class="ai-main">${main(esc)}</div></div>`;
-  root.querySelectorAll('.ai-nav').forEach((bar) => {
-    const on = bar.querySelector('a.on');
-    if (!on) return;
-    const pad = 28;
-    const left = on.offsetLeft;
-    const right = left + on.offsetWidth;
-    if (left < bar.scrollLeft + pad) bar.scrollLeft = Math.max(0, left - pad);
-    else if (right > bar.scrollLeft + bar.clientWidth - pad) bar.scrollLeft = right - bar.clientWidth + pad;
-  });
+  const body = st.view === 'alur' ? board(esc) : st.view === 'kalender' ? calendar(esc) : st.view === 'setuju' ? approve(esc) : home(esc);
+  root.innerHTML = `<div class="kai-shell" id="kaiShell" data-kai="${st.brand}">${side(esc)}<div class="kai-main"><div class="kai-scroll">${body}</div>${cmdBar(esc)}</div>${sheet(esc)}</div>`;
   bind();
 }
 
 export function viewAiOffice(next, sub) {
   ctx = next;
-  st.view = VIEWS.includes(sub) ? sub : 'overview';
+  st.view = ['alur', 'kalender', 'setuju'].includes(sub) ? sub : '';
   paint();
 }
