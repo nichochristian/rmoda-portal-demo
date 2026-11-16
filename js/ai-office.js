@@ -50,10 +50,10 @@ const STATUS = {
 };
 
 const NAV = [
-  ['', 'Beranda'],
-  ['alur', 'Alur konten'],
-  ['kalender', 'Kalender'],
-  ['setuju', 'Perlu persetujuan'],
+  ['', 'Beranda', 'Beranda'],
+  ['alur', 'Alur konten', 'Alur'],
+  ['kalender', 'Kalender', 'Kalender'],
+  ['setuju', 'Perlu persetujuan', 'Setujui'],
 ];
 
 const BRANDS = [
@@ -192,11 +192,11 @@ const ICO = {
 
 function side(esc) {
   const n = waiting().length;
-  const links = NAV.map(([id, label]) => {
+  const links = NAV.map(([id, label, short]) => {
     const on = st.view === id;
     const icon = id === '' ? ICO.home : id === 'alur' ? ICO.flow : id === 'kalender' ? ICO.cal : ICO.ok;
     const badge = id === 'setuju' ? `<span class="kai-count${n ? '' : ' is-zero'}">${n}</span>` : '';
-    return `<a href="#/ai-office${id ? '/' + id : ''}" class="${on ? 'on' : ''}"${on ? ' aria-current="page"' : ''}>${icon}<span>${esc(label)}</span>${badge}</a>`;
+    return `<a href="#/ai-office${id ? '/' + id : ''}" class="${on ? 'on' : ''}"${on ? ' aria-current="page"' : ''}>${icon}<span class="kai-lab">${esc(label)}</span><span class="kai-short">${esc(short)}</span>${badge}</a>`;
   }).join('');
   const pills = BRANDS.map((b) => `<button type="button" data-brand="${b.id}" aria-pressed="${st.brand === b.id}">${esc(b.name)}</button>`).join('')
     + '<button type="button" disabled>Proflex · Segera</button>';
@@ -212,7 +212,7 @@ function cmdBar(esc) {
   const last = loadCmds().find((x) => x.brand === (st.brand === 'rmoda' ? 'rmoda' : st.brand));
   const chip = last ? commandStatus(last) : 'Demo';
   return `<form class="kai-cmd" data-brand="${st.brand === 'rmoda' ? 'rmoda' : st.brand}">
-    <span class="kai-demo" id="kaiDemo">${esc(chip === 'Demo' ? 'Demo, belum terkirim' : chip)}</span>
+    <span class="kai-demo" id="kaiDemo" title="Contoh. Belum terkirim ke agen.">${esc(chip === 'Demo' ? 'Demo' : chip)}</span>
     <label class="kai-sr" for="kaiCmd">Perintah</label>
     <input class="inp" id="kaiCmd" maxlength="500" placeholder="Beri perintah ke ${who}${where}..." aria-describedby="kaiDemo">
     <button class="btn" type="submit">Kirim</button>
@@ -253,7 +253,7 @@ function board(esc) {
     const items = list.filter((t) => GROUP_OF(t.step) === id);
     return `<section class="kai-col"><header><b>${esc(name)}</b><span>${items.length}</span></header>${items.map((t) => card(esc, t)).join('') || '<p class="muted">Kosong</p>'}</section>`;
   }).join('');
-  return `<header class="kai-hello"><h2>Alur konten</h2><p class="muted">Empat bagian. Nama tahap ada di tiap kartu. Geser ke samping di HP.</p></header><div class="kai-board">${cols}</div>`;
+  return `<header class="kai-hello"><h2>Alur konten</h2><p class="muted">Empat bagian. Geser ke samping di HP.</p></header><div class="kai-board">${cols}</div>`;
 }
 
 function calendar(esc) {
@@ -276,7 +276,7 @@ function approve(esc) {
       ${st.revise === t.id ? `<label class="kai-note">Catatan<textarea class="inp" data-note="${esc(t.id)}" rows="2" maxlength="240" placeholder="Apa yang perlu diperbaiki?"></textarea><button type="button" class="btn" data-save="${esc(t.id)}">Simpan catatan</button></label>` : ''}
     </div>
   </article>`;
-  return `<header class="kai-hello"><h2>Perlu persetujuan</h2><p class="muted">Yang menunggu Pak. Setujui atau minta revisi. Perubahan hanya di browser ini.</p></header>
+  return `<header class="kai-hello"><h2>Perlu persetujuan</h2><p class="muted">Setujui atau minta revisi. Hanya tersimpan di browser ini.</p></header>
     <div class="kai-list">${list.map(row).join('') || '<p class="kai-empty">Tidak ada yang menunggu.</p>'}</div>`;
 }
 

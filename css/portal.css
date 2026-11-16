@@ -1091,6 +1091,7 @@ html[data-theme="light"] .palette { background: color-mix(in srgb, #1a1814 38%, 
 .ai-nav a { display: flex; align-items: center; gap: 8px; min-height: 40px; padding: 0 10px; border-radius: 10px; color: var(--ink-2); font-weight: 600; }
 .ai-nav a svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
 .ai-nav a.on, .ai-nav a:hover { background: var(--fill); color: var(--ink); }
+.kai-short { display: none; }
 .kai-count { margin-left: auto; min-width: 20px; height: 20px; padding: 0 6px; border-radius: 999px; background: #9f1239; color: #fff; font-size: 12px; display: inline-grid; place-items: center; }
 .kai-count.is-zero { background: var(--fill); color: var(--ink-2); }
 .kai-main {
@@ -1152,7 +1153,7 @@ html[data-theme="light"] .palette { background: color-mix(in srgb, #1a1814 38%, 
 .kai-note { display: grid; gap: 6px; flex: 1 1 100%; font-weight: 600; }
 .kai-note textarea { min-height: 64px; padding: 8px 10px; }
 .kai-empty { margin: 0; }
-.kai-scroll { display: grid; gap: 16px; align-content: start; min-width: 0; min-height: 0; }
+.kai-scroll { display: grid; gap: 16px; align-content: start; min-width: 0; min-height: 0; padding-bottom: var(--kai-gap, 12px); scroll-padding-bottom: var(--kai-gap, 12px); }
 .kai-cmd { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 8px; align-items: center; position: static; background: #fff; border: 1px solid var(--line); border-radius: 14px; padding: 8px; }
 body:has(.kai-sheet) .kai-cmd { visibility: hidden; }
 .kai-demo { font-size: 12px; font-weight: 700; color: #7a5e00; background: #fdf1d5; border-radius: 999px; padding: 4px 8px; white-space: nowrap; }
@@ -1171,41 +1172,63 @@ body:has(.kai-sheet) .kai-cmd { visibility: hidden; }
 .kai-sheet h2 { margin: 0; font-size: 22px; }
 .kai-ph { height: 140px; border-radius: 12px; background: #efeae2; color: #5c574e; display: grid; place-items: center; gap: 4px; justify-items: center; }
 .kai-ph svg { width: 36px; height: 36px; fill: none; stroke: currentColor; stroke-width: 1.6; }
+body:has(.kai-shell) { display: flex; flex-direction: column; height: 100vh; max-height: 100vh; overflow: hidden; }
+body:has(.kai-shell) > #root { display: flex; flex-direction: column; flex: 1 1 auto; min-height: 0; height: 100%; overflow: hidden; }
+body:has(.kai-shell) .shell { flex: 1 1 auto; height: auto; min-height: 0; overflow: hidden; }
+body:has(.kai-shell) .top { position: static; }
+.shell:has(.kai-shell) .main { height: 100%; min-height: 0; overflow: hidden; }
+.content:has(.kai-shell) {
+  --kai-dock: 0px; --kai-bar: 56px; --kai-gap: 12px;
+  flex: 1 1 auto; min-height: 0; height: auto; overflow: hidden;
+  display: grid; grid-template-rows: minmax(0, 1fr);
+  padding-bottom: calc(var(--kai-dock) + env(safe-area-inset-bottom));
+}
+.kai-shell { height: 100%; min-height: 0; align-items: stretch; }
+.kai-main { height: 100%; min-height: 0; grid-template-rows: minmax(0, 1fr) auto; align-content: stretch; overflow: hidden; }
+.kai-scroll { overflow: auto; }
+.kai-cmd { min-height: var(--kai-bar); }
 @media (min-width: 861px) {
-  .content:has(.kai-shell) { height: calc(100vh - 33px - var(--top)); padding-bottom: 16px; overflow: hidden; }
-  body:not(:has(.demo)) .content:has(.kai-shell) { height: calc(100vh - var(--top)); }
-  .kai-shell { height: 100%; min-height: 0; align-items: stretch; }
+  .shell:has(.kai-shell) .side { height: 100%; }
   .ai-side { position: static; max-height: 100%; overflow: auto; }
-  .kai-main { height: 100%; grid-template-rows: minmax(0, 1fr) auto; align-content: stretch; overflow: hidden; }
-  .kai-scroll { overflow: auto; }
 }
 @media (max-width: 860px) {
-  .content:has(.kai-shell) { padding-bottom: 0; }
+  .content:has(.kai-shell) { --kai-dock: 61px; --kai-bar: 48px; --kai-gap: 8px; padding: 8px 10px calc(var(--kai-dock) + env(safe-area-inset-bottom)); }
+  .kai-main { padding: 8px 12px 4px; }
+  .kai-pills button, .kai-locs button { min-height: 32px; }
+  .kai-hello { gap: 2px; }
+  .kai-hello h2 { font-size: 22px; }
+  .kai-col { gap: 6px; padding: 8px; }
+  .kai-card { padding: 6px; gap: 4px; }
+  .kai-look { min-height: 32px; }
   .kai-pills { grid-template-columns: 1fr 1fr; }
-  .kai-shell { --kai-dock: 61px; --kai-bar: 90px; --kai-gap: 12px; grid-template-columns: 1fr; }
-  .ai-side { position: static; }
+  .kai-shell { grid-template-columns: 1fr; grid-template-rows: auto minmax(0, 1fr); gap: 8px; }
+  .ai-side { position: static; max-height: none; overflow: visible; padding: 8px; }
   .kai-hello h2 { white-space: normal; }
   .kai-metrics { grid-template-columns: 1fr; }
+  .kai-metrics article { padding: 8px 12px; }
+  .kai-metrics b { font-size: 24px; }
+  .kai-lab { display: none; }
+  .kai-short { display: block; max-width: 100%; overflow: hidden; text-overflow: ellipsis; }
   .ai-nav {
-    display: flex; overflow-x: auto; scrollbar-width: none; gap: 4px;
-    scroll-padding-inline: 40px; padding-inline: 40px 160px;
-    mask-image: linear-gradient(to right, transparent 0, transparent 24px, #000 40px, #000 calc(100% - 40px), transparent calc(100% - 24px), transparent);
-    -webkit-mask-image: linear-gradient(to right, transparent 0, transparent 24px, #000 40px, #000 calc(100% - 40px), transparent calc(100% - 24px), transparent);
+    display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 4px;
+    overflow: visible; padding: 0; scroll-padding: 0;
+    mask-image: none; -webkit-mask-image: none;
   }
-  .ai-nav a { flex: none; scroll-margin-inline: 40px; }
+  .ai-nav a {
+    flex: none; flex-direction: column; justify-content: center; text-align: center;
+    min-width: 0; min-height: 44px; padding: 4px 2px; gap: 1px;
+    font-size: 11px; line-height: 1.15; position: relative; scroll-margin: 0;
+  }
+  .kai-count { position: absolute; top: 2px; right: 4px; margin: 0; min-width: 16px; height: 16px; padding: 0 4px; font-size: 10px; }
   .kai-board { display: flex; overflow-x: auto; max-height: none; scroll-snap-type: x mandatory; scroll-padding-inline: 4px; padding-bottom: 8px; }
   .kai-col { flex: 0 0 88%; scroll-snap-align: start; }
-  .kai-week, .kai-list { max-height: none; overflow: visible; }
   .kai-week { grid-template-columns: 1fr; }
   .kai-cmd {
-    position: fixed; z-index: 34; left: 10px; right: 10px;
-    bottom: calc(var(--kai-dock) + env(safe-area-inset-bottom));
-    grid-template-columns: minmax(0, 1fr) auto;
-    box-shadow: none;
+    position: static; height: var(--kai-bar); min-height: var(--kai-bar); max-height: var(--kai-bar);
+    padding: 0 6px; box-shadow: none; z-index: auto;
   }
-  .kai-demo { grid-column: 1 / -1; justify-self: start; }
-  .kai-main { padding-bottom: calc(var(--kai-dock) + var(--kai-bar) + var(--kai-gap) + env(safe-area-inset-bottom)); }
-  .kai-sheet { top: auto; left: 0; width: 100%; max-height: min(70vh, 560px); border-radius: 16px 16px 0 0; bottom: calc(var(--kai-dock) + env(safe-area-inset-bottom)); }
+  .kai-cmd .inp, .kai-cmd .btn { height: 36px; min-height: 36px; }
+  .kai-sheet { top: auto; left: 0; width: 100%; max-height: min(70vh, 560px); border-radius: 16px 16px 0 0; bottom: calc(61px + env(safe-area-inset-bottom)); }
 }
 @media (hover: hover) and (pointer: fine) {
   .kai-card, .kai-approve, .kai-metrics article { transition: transform .18s var(--ease); }
