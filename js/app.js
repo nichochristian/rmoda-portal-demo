@@ -3,7 +3,7 @@ import { viewWork } from './work.js?v=45';
 import { viewCrm } from './crm.js?v=42';
 
 // Satu nomor versi untuk semua file, supaya browser tidak menyimpan salinan lama.
-const MV = 44;
+const MV = 46;
 const LAZY = {
   setoran: { view: 'viewSetoran', home: 'setoranHomeSummary', css: true },
   hrd:     { view: 'viewHrd',     home: 'hrdHomeSummary',     css: true },
@@ -139,7 +139,7 @@ async function boot() {
 }
 
 function demoBanner() {
-  return DEMO ? `<div class="demo">DEMO - data contoh. Angka di layar ini contoh, hanya tersimpan di browser ini.</div>` : '';
+  return DEMO ? `<div class="demo">Mode demo. Angka di layar ini contoh, hanya tersimpan di browser ini.</div>` : '';
 }
 
 function renderLogin() {

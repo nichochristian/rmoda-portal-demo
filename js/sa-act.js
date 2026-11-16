@@ -3,7 +3,7 @@
 // Batalkan baris pembayaran (v22) menandai Dibatalkan, tidak menghapus baris.
 
 import { LOCS, UNIT_OF, nextNum, fmtNo, woCode, coerceDiv, plateKey, nominalProblems, payJumlah, jobComplete, preserveSerah, bayarAktif } from './rules.js?v=45';
-import { docHtml, printHtml, downloadPdf } from './print-doc.js?v=45';
+import { docHtml, printHtml, downloadPdf } from './print-doc.js?v=46';
 
 const uid = () => (crypto.randomUUID ? crypto.randomUUID() : 'id' + Date.now());
 const today = () => new Date().toISOString().slice(0, 10);

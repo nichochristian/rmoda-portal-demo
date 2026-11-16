@@ -8,7 +8,7 @@ export function docHtml(model) {
   const head = `<header class="kop"><div class="brandline">${logo ? `<img src="${esc(logo)}" alt="RMODA Studio">` : ''}<div><b>${esc(entitas)}</b>${alamat ? `<p class="addr">${esc(alamat)}</p>` : ''}</div></div><h1>${esc(title)}</h1><p class="docno">No. ${esc(no || '')}</p><p class="doctgl">Tanggal ${esc(tgl || '')}</p></header>`;
   const cust = `<p class="cust"><b>${esc(trx.kepada || '')}</b><br>${esc(trx.kend || '')}${trx.plat ? ' · ' + esc(trx.plat) : ''}<br>${esc(trx.lokasi || '')}${trx.wo ? '<br>WO ' + esc(trx.wo) : ''}</p>`;
   const table = `<table><thead><tr>${['Keterangan', 'Qty', 'Harga', 'Diskon', 'Jumlah'].map((h) => `<th>${h}</th>`).join('')}</tr></thead><tbody>${(rows || []).map((r) => `<tr><td>${esc(r[0])}</td><td class="n">${esc(r[1])}</td><td class="n">${esc(r[2])}</td><td class="n">${esc(r[3])}</td><td class="n">${esc(r[4])}</td></tr>`).join('')}</tbody></table>`;
-  const sum = `<div class="totals">${(totals || []).map(([k, v]) => `<div><span>${esc(k)}</span><b class="amt">${esc(v)}</b></div>`).join('')}</div>`;
+  const sum = `<table class="sumtbl"><colgroup><col style="width:36%"><col style="width:10%"><col style="width:22%"><col style="width:14%"><col style="width:18%"></colgroup><tbody>${(totals || []).map(([k, v]) => `<tr><td class="lab" colspan="4">${esc(k)}</td><td class="n amt">${esc(v)}</td></tr>`).join('')}</tbody></table>`;
   const foot = `${ket ? `<p class="ket"><b>Keterangan</b><br>${esc(ket)}</p>` : ''}<div class="ttd"><div><small>Hormat kami</small><b>${esc(ttd || entitas || '')}</b></div><div><small>Penerima</small><b>${esc(trx.kepada || '')}</b></div></div>`;
   return `<!doctype html><html lang="id"><head><meta charset="utf-8"><title>${esc(title)} ${esc(no || '')}</title>
 <style>
@@ -17,23 +17,24 @@ html, body { margin: 0; color: #111; font: 12px/1.45 "Inter", system-ui, sans-se
 .brandline { display: flex; gap: 12px; align-items: flex-start; }
 .brandline img { height: 42px; width: auto; }
 .addr { white-space: pre-line; margin: 4px 0 0; }
-.kop h1 { font-size: 18px; margin: 10px 0 0; }
+.kop h1 { font-size: 18px; margin: 14px 0 0; clear: both; }
 .docno, .doctgl { margin: 2px 0; }
 table { width: 100%; border-collapse: collapse; margin-top: 12px; table-layout: fixed; }
 th, td { border-bottom: 1px solid #ddd; padding: 6px 4px; text-align: left; vertical-align: top; overflow-wrap: anywhere; }
 th { font-size: 11px; }
-td.n, th:nth-child(n+2) { text-align: right; white-space: nowrap; }
+td.n, th:nth-child(n+3) { text-align: right; white-space: nowrap; }
 th:first-child, td:first-child { width: 36%; }
-th:nth-child(2), td:nth-child(2) { width: 10%; }
+th:nth-child(2), td:nth-child(2) { width: 10%; text-align: center; white-space: nowrap; }
 th:nth-child(3), td:nth-child(3) { width: 22%; }
 th:nth-child(4), td:nth-child(4) { width: 14%; }
 th:nth-child(5), td:nth-child(5) { width: 18%; }
 thead { display: table-header-group; }
 tr, .totals, .ttd, .ket, .cust { break-inside: avoid; page-break-inside: avoid; }
-.totals { margin-top: 12px; margin-left: auto; width: min(320px, 100%); }
-.totals div { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; }
-.totals span { min-width: 0; }
-.totals b, .amt { white-space: nowrap; flex: none; }
+table.sumtbl { margin-top: 8px; }
+table.sumtbl td { border: 0; padding-top: 3px; padding-bottom: 3px; }
+table.sumtbl td.lab { text-align: right; }
+table.sumtbl td.n { text-align: right; white-space: nowrap; }
+.amt { white-space: nowrap; }
 .ttd { display: flex; justify-content: space-between; gap: 24px; margin-top: 36px; }
 .ttd div { width: 42%; }
 .ttd small, .ttd b { display: block; }
@@ -45,9 +46,11 @@ tr, .totals, .ttd, .ket, .cust { break-inside: avoid; page-break-inside: avoid; 
   .sheet { padding: 10px; min-height: 0; }
   table, .kop, .cust { font-size: 11px; }
   th, td { padding: 4px 2px; }
-  th:nth-child(4), td:nth-child(4) { display: none; }
-  th:nth-child(5), td:nth-child(5) { width: 34%; white-space: nowrap; }
-  th:nth-child(3), td:nth-child(3) { width: 28%; white-space: nowrap; }
+  table:not(.sumtbl) th:nth-child(4), table:not(.sumtbl) td:nth-child(4) { display: none; }
+  table:not(.sumtbl) th:nth-child(5), table:not(.sumtbl) td:nth-child(5) { width: 34%; white-space: nowrap; }
+  table:not(.sumtbl) th:nth-child(3), table:not(.sumtbl) td:nth-child(3) { width: 28%; white-space: nowrap; }
+  table.sumtbl td.lab { width: auto; }
+  table.sumtbl td.n { width: 42%; text-align: right; }
 }
 </style></head><body><article class="sheet">${head}${cust}${table}${sum}${foot}</article></body></html>`;
 }
@@ -142,32 +145,46 @@ export async function downloadPdf(model, filename) {
       y -= h + 10;
     }
     text(model.entitas || '', margin, 13, bold, 400);
-    y -= 14;
+    y -= 16;
+    const textW = pageW - margin * 2;
     if (model.alamat) {
       for (const line of String(model.alamat).split(/\n/)) {
-        text(line, margin, 9, font, 480);
+        wrap(line, margin, 9, font, textW, 12);
         y -= 12;
       }
     }
-    text(model.title || '', margin, 16, bold, 400);
-    y -= 18;
-    text('No. ' + (model.no || ''), margin, 11, font, 480);
+    y -= 10;
+    text(model.title || '', margin, 16, bold, textW);
+    y -= 20;
+    text('No. ' + (model.no || ''), margin, 11, font, textW);
     y -= 14;
-    text('Tanggal ' + (model.tgl || ''), margin, 11, font, 480);
+    text('Tanggal ' + (model.tgl || ''), margin, 11, font, textW);
     y -= 16;
-    text(model.trx?.kepada || '', margin, 11, bold, 480);
+    wrap(model.trx?.kepada || '', margin, 11, bold, textW, 13);
+    y -= 14;
+    wrap([model.trx?.kend, model.trx?.plat].filter(Boolean).join(' · '), margin, 10, font, textW, 12);
     y -= 13;
-    text([model.trx?.kend, model.trx?.plat].filter(Boolean).join(' · '), margin, 10, font, 480);
-    y -= 12;
-    text([model.trx?.lokasi, model.trx?.wo ? 'WO ' + model.trx.wo : ''].filter(Boolean).join(' · '), margin, 10, font, 480);
+    wrap([model.trx?.lokasi, model.trx?.wo ? 'WO ' + model.trx.wo : ''].filter(Boolean).join(' · '), margin, 10, font, textW, 12);
     y -= 18;
     if (cont) { text('(lanjutan)', margin, 8, font, 200); y -= 12; }
     const heads = ['Keterangan', 'Qty', 'Harga', 'Diskon', 'Jumlah'];
-    let x = margin;
-    heads.forEach((h, i) => { text(h, x, 9, bold, cols[i] - 4); x += cols[i]; });
+    heads.forEach((h, i) => drawCol(h, i, y, bold, 9));
     y -= 4;
-    page.drawLine({ start: { x: margin, y }, end: { x: pageW - margin, y }, thickness: 0.6 });
+    page.drawLine({ start: { x: margin, y }, end: { x: margin + cols.reduce((a, n) => a + n, 0), y }, thickness: 0.6 });
     y -= 14;
+  }
+  const colX = [];
+  let acc = margin;
+  for (const w of cols) { colX.push(acc); acc += w; }
+  const jumlahRight = acc - 6;
+  function drawCol(label, i, yPos, face, size) {
+    const s = pdfSafe(label);
+    if (!s) return;
+    const tw = face.widthOfTextAtSize(s, size);
+    let x = colX[i] + 2;
+    if (i === 1) x = colX[i] + (cols[i] - tw) / 2;
+    else if (i > 1) x = colX[i] + cols[i] - 6 - tw;
+    page.drawText(s, { x, y: yPos, size, font: face });
   }
   drawHeader(false);
 
@@ -178,13 +195,7 @@ export async function downloadPdf(model, filename) {
     const nameLines = wrap(row[0], x, 9, font, cols[0] - 6, 11);
     const rowH = Math.max(14, nameLines * 11);
     y = top;
-    x = margin + cols[0];
-    for (let i = 1; i < 5; i++) {
-      const cell = pdfSafe(row[i]);
-      const w = font.widthOfTextAtSize(cell, 9);
-      page.drawText(cell, { x: x + cols[i] - 6 - w, y: top, size: 9, font });
-      x += cols[i];
-    }
+    for (let i = 1; i < 5; i++) drawCol(row[i], i, top, font, 9);
     y = top - rowH;
     page.drawLine({ start: { x: margin, y: y + 4 }, end: { x: pageW - margin, y: y + 4 }, thickness: 0.3, color: PDFLib.rgb(0.85, 0.85, 0.85) });
     y -= 8;
@@ -196,12 +207,13 @@ export async function downloadPdf(model, filename) {
     const label = pdfSafe(k);
     const val = pdfSafe(v);
     const vw = bold.widthOfTextAtSize(val, 11);
-    const amountX = pageW - margin - vw;
-    const labelX = pageW - margin - 280;
-    const labelW = Math.max(40, amountX - labelX - 8);
+    const amountX = jumlahRight - vw;
     page.drawText(val, { x: amountX, y, size: 11, font: bold });
+    const lw = font.widthOfTextAtSize(label, 10);
+    const labelRoom = amountX - margin - 8;
     const startY = y;
-    wrap(label, labelX, 10, font, labelW, 12);
+    if (lw <= labelRoom) page.drawText(label, { x: amountX - 8 - lw, y, size: 10, font });
+    else wrap(label, margin, 10, font, labelRoom, 12);
     y = Math.min(y, startY) - 16;
   }
   if (model.ket) {

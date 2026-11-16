@@ -770,7 +770,9 @@ tr.is-batal td:not(:last-child) { text-decoration: line-through; }
     border: 2px solid var(--ink); background: var(--surface); color: var(--ink);
     opacity: 1; min-height: 48px;
   }
-  .sa-nav, .wt-sub .wt-seg { flex-wrap: wrap; width: 100%; max-width: 100%; }
+  .sa-nav { flex-wrap: wrap; width: 100%; max-width: 100%; }
+  .wt-sub .wt-seg { flex-wrap: nowrap; overflow-x: auto; width: 100%; max-width: 100%; scrollbar-width: none; }
+  .wt-sub .wt-seg button { flex: none; }
   .desk-table { display: none; }
   .m-cards { display: grid; }
   .tablewrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
@@ -920,7 +922,10 @@ tr.is-late td { box-shadow: inset 3px 0 0 var(--bad); }
 @media (max-width: 860px) {
   .home-grid, .today { grid-template-columns: 1fr 1fr; }
   .home-side { grid-column: 1 / -1; }
-  .board { grid-auto-flow: row; grid-auto-columns: unset; grid-template-columns: 1fr; overflow: visible; }
+  .board { display: flex; gap: 10px; overflow-x: auto; overflow-y: visible; scroll-snap-type: x mandatory; scroll-padding-inline: 4px; -webkit-overflow-scrolling: touch; overscroll-behavior-x: contain; padding-bottom: 12px; grid-template-columns: none; }
+  .board .col { width: 228px; min-width: 228px; flex: 0 0 228px; scroll-snap-align: start; scroll-snap-stop: always; min-height: 140px; }
+  .issue { touch-action: pan-x pan-y; cursor: pointer; }
+  .cmdbar .wt-seg { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; }
   .col { min-height: 0; }
   .irow { grid-template-columns: auto minmax(0, 1fr); }
   .irow__meta { grid-column: 2; }
