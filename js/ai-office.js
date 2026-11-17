@@ -1,10 +1,12 @@
-// Kantor AI demo. Satu pintu pengirim: sendCommand.
+// Team Project demo. Satu pintu pengirim: sendCommand.
 // Demo hanya menulis antrian di localStorage. Tidak ada fetch, webhook, atau key.
 
 const KEY = 'rmoda-portal-ai-commands';
 const WORK_KEY = 'rmoda-portal-ai-work';
 const PROJ_KEY = 'rmoda-portal-ai-projects';
 const ASK_KEY = 'rmoda-portal-ai-agent-asks';
+const TEAM_KEY = 'rmoda-portal-ai-team';
+const LOG_KEY = 'rmoda-portal-ai-log';
 const WEBO_KEY = 'rmoda-portal-webo-queue';
 const ACCEPT_MS = 2000;
 const WORK_MS = 3200;
@@ -49,7 +51,8 @@ const STEPS = {
 };
 const GROUPS = [['riset', 'Riset & Ide'], ['produksi', 'Produksi'], ['approval', 'Approval'], ['tayang', 'Tayang']];
 const GROUP_OF = (step) => (step <= 4 ? 'riset' : step <= 10 ? 'produksi' : step === 11 ? 'approval' : 'tayang');
-const STATUS = { belum: 'Antre', kerja: 'Dikerjakan', tunggu: 'Perlu persetujuan', revisi: 'Revisi', selesai: 'Selesai' };
+const STATUS = { diterima: 'Diterima', kerja: 'Dikerjakan', tunggu: 'Menunggu persetujuan', revisi: 'Revisi', selesai: 'Selesai' };
+const normStatus = (s) => (s === 'belum' || s === 'antre' || s === 'Antre' ? 'diterima' : (STATUS[s] ? s : 'diterima'));
 const NAV = [
   ['', 'Beranda', 'Beranda'],
   ['project', 'Project', 'Project'],
@@ -65,6 +68,18 @@ const BRANDS = [
 
 const task = (id, row) => ({ id, kind: 'konten', day: 0, copy: '', script: '', ...row });
 const SEEDS = [
+  {
+    id: 'p-fase2', name: 'Fase 2 Team Project EXPC', goal: 'Kerja fase 2 bersama tim EXPC Academy.', due: '20 Des',
+    scope: 'one', brands: [{ id: 'academy' }], pm: 'expi', agents: ['kata', 'grady', 'vira', 'webo'],
+    tasks: [
+      task('p-fase2-1', { title: 'Riset kebutuhan fase 2', step: 1, status: 'diterima', due: '2 Des', agent: 'expi', day: 0, copy: 'Contoh riset. Kebutuhan kelas dan halaman fase 2.' }),
+      task('p-fase2-2', { title: 'Teks landing fase 2', step: 6, status: 'kerja', due: '6 Des', agent: 'kata', day: 2, copy: 'Contoh teks. Ajakan ikut fase 2, tanpa nama brand baru.' }),
+      task('p-fase2-3', { title: 'Desain sampul fase 2', step: 10, status: 'kerja', due: '8 Des', agent: 'grady', day: 3, copy: 'Contoh desain. Judul fase 2, tanpa wajah.' }),
+      task('p-fase2-4', { title: 'Video penjelasan fase 2', step: 9, status: 'revisi', due: '10 Des', agent: 'vira', day: 4, note: 'Perpendek jadi di bawah 30 detik.', copy: 'Contoh video. Penjelasan singkat fase 2.' }),
+      task('p-fase2-5', { title: 'Halaman web fase 2', step: 10, status: 'tunggu', due: '12 Des', agent: 'webo', day: 5, copy: 'Contoh halaman. Mohon disetujui Pak sebelum tayang.' }),
+      task('p-fase2-6', { title: 'Jadwal tayang fase 2', step: 12, status: 'selesai', due: '1 Des', agent: 'expi', day: 6, copy: 'Sudah masuk jadwal. Contoh.' }),
+    ],
+  },
   {
     id: 'p-des', name: 'Konten rutin EXPC Des', goal: 'Konten kelas dan produk rutin bulan Desember.', due: '31 Des',
     scope: 'one', brands: [{ id: 'academy' }], pm: 'expi', agents: ['mars', 'somia', 'kata', 'vira', 'grady'],
@@ -102,19 +117,19 @@ const SEEDS = [
     scope: 'one', brands: [{ id: 'rmoda' }], pm: 'rmo', agents: ['mars', 'grady', 'kata'],
     tasks: [
       task('p-rebrand-1', { title: 'Riset arah visual', step: 1, status: 'kerja', due: '10 Des', agent: 'mars', day: 0, copy: 'Contoh riset. Tanpa nama brand baru.' }),
-      task('p-rebrand-2', { title: 'Teks pengantar', step: 6, status: 'belum', due: '12 Des', agent: 'kata', day: 2, copy: 'Contoh teks netral untuk RMODA Studio.' }),
+      task('p-rebrand-2', { title: 'Teks pengantar', step: 6, status: 'diterima', due: '12 Des', agent: 'kata', day: 2, copy: 'Contoh teks netral untuk RMODA Studio.' }),
       task('p-rebrand-3', { title: 'Persetujuan arah', step: 11, status: 'tunggu', due: '20 Des', agent: 'rmo', day: 5, copy: 'Arah visual contoh. Mohon dilihat Pak.' }),
     ],
   },
 ];
 
 const WEBO_SEED = [
-  { id: 'w1', page: 'Kantor AI Project', device: 'HP 390x844', file: '', note: 'Daftar project terasa rapat di HP.', priority: 'Biasa', status: 'Dikerjakan', createdAt: 1 },
+  { id: 'w1', page: 'Team Project', device: 'HP 390x844', file: '', note: 'Daftar project terasa rapat di HP.', priority: 'Biasa', status: 'Dikerjakan', createdAt: 1 },
   { id: 'w2', page: 'Work Tracker', device: 'Desktop 1440x900', file: 'papan.png', note: 'Kolom papan kepotong di layar lebar.', priority: 'Penting', status: 'Siap dicek di demo', createdAt: 2 },
   { id: 'w3', page: 'Beranda', device: 'HP 390x844', file: '', note: 'Angka ringkasan sudah dicek Pak.', priority: 'Biasa', status: 'Diterima', createdAt: 3 },
 ];
 
-const st = { brand: 'holdings', loc: 'Makassar', view: '', projectId: '', tab: 'papan', drawer: '', revise: '', form: null, ask: false, cat: 'all' };
+const st = { brand: 'academy', loc: 'Makassar', view: '', projectId: '', tab: 'papan', drawer: '', revise: '', reviseErr: '', form: null, ask: false, cat: 'all', teamEdit: '', pick: null };
 let ctx = null;
 let timer = 0;
 
@@ -137,16 +152,73 @@ function readWork() {
   const raw = readJson(WORK_KEY, {});
   return raw && typeof raw === 'object' && !Array.isArray(raw) ? raw : {};
 }
-function projects() {
+function migrateWork() {
+  const map = readWork();
+  let dirty = false;
+  Object.keys(map).forEach((id) => {
+    const row = map[id];
+    if (row && row.status && normStatus(row.status) !== row.status) {
+      map[id] = { ...row, status: normStatus(row.status) };
+      dirty = true;
+    }
+  });
+  if (dirty) writeJson(WORK_KEY, map);
+}
+function brandRank(p) {
+  const id = (p.brands || [])[0]?.id;
+  if (id === 'academy') return 0;
+  if (id === 'supplies') return 1;
+  if (id === 'rmoda') return 2;
+  return 3;
+}
+function baseProjects() {
   const saved = readJson(PROJ_KEY, []);
   const extra = Array.isArray(saved) ? saved.filter((p) => p && p.id && !SEEDS.some((s) => s.id === p.id)) : [];
   return [...SEEDS, ...extra];
+}
+function teamPatch(id) {
+  const all = readJson(TEAM_KEY, {});
+  return all && typeof all === 'object' ? (all[id] || null) : null;
+}
+function saveTeam(id, next) {
+  const all = readJson(TEAM_KEY, {});
+  const bag = all && typeof all === 'object' && !Array.isArray(all) ? all : {};
+  bag[id] = { pm: next.pm, agents: next.agents };
+  writeJson(TEAM_KEY, bag);
+}
+function withTeam(p) {
+  const o = teamPatch(p.id);
+  if (!o) return p;
+  return { ...p, pm: o.pm || p.pm, agents: o.agents || p.agents };
+}
+function projects() {
+  return baseProjects().map(withTeam).sort((a, b) => brandRank(a) - brandRank(b) || String(a.name).localeCompare(String(b.name), 'id'));
+}
+function addLog(projectId, text) {
+  if (!projectId || !text) return;
+  const list = readJson(LOG_KEY, []);
+  const row = { id: uid(), projectId, text, createdAt: Date.now() };
+  writeJson(LOG_KEY, [row, ...(Array.isArray(list) ? list : [])].slice(0, 80));
+}
+const SEED_LOGS = [
+  { id: 'log-fase-1', projectId: 'p-fase2', text: 'Perintah ke Expi: Siapkan kalender fase 2', createdAt: Date.now() - 86400000 },
+  { id: 'log-fase-2', projectId: 'p-fase2', text: 'Agent ditambah: Webo', createdAt: Date.now() - 7200000 },
+];
+function logsOf(projectId) {
+  const saved = readJson(LOG_KEY, []);
+  const extra = Array.isArray(saved) ? saved.filter((x) => x && x.projectId === projectId) : [];
+  const seeds = SEED_LOGS.filter((x) => x.projectId === projectId);
+  const ids = new Set(extra.map((x) => x.id));
+  return [...extra, ...seeds.filter((x) => !ids.has(x.id))].sort((a, b) => b.createdAt - a.createdAt);
 }
 function findProject(id) { return projects().find((p) => p.id === id) || null; }
 function tasksOf(p) {
   if (!p) return [];
   const map = readWork();
-  return (p.tasks || []).map((t) => ({ ...t, ...(map[t.id] || {}) }));
+  return (p.tasks || []).map((t) => {
+    const over = map[t.id] || {};
+    return { ...t, ...over, status: normStatus(over.status || t.status), note: over.note || t.note || '' };
+  });
 }
 function progressOf(p) {
   const list = tasksOf(p);
@@ -199,6 +271,10 @@ export function sendCommand(brand, projectId, text) {
   if (!known(brand)) return Promise.resolve({ ok: false, error: 'Brand tidak dikenal.' });
   const item = { id: uid(), brand, projectId: projectId || '', text: clean, createdAt: Date.now() };
   if (!writeJson(KEY, [item, ...loadCmds()].slice(0, KEEP))) return Promise.resolve({ ok: false, error: 'Browser menolak menyimpan antrian demo.' });
+  if (projectId) {
+    const who = AGENTS[findProject(projectId)?.pm]?.name || 'PM';
+    addLog(projectId, 'Perintah ke ' + who + ': ' + clean);
+  }
   return Promise.resolve({ ok: true, item: { ...item, status: 'Terkirim (demo)' } });
 }
 
@@ -266,7 +342,7 @@ function side(esc) {
   const locs = st.brand === 'rmoda'
     ? `<div class="kai-locs" role="group" aria-label="Cabang">${['BSD', 'Legok', 'Makassar'].map((l) => `<button type="button" data-loc="${l}" aria-pressed="${st.loc === l}">${l}</button>`).join('')}</div>`
     : '';
-  return `<aside class="ai-side"><div class="kai-pills" role="group" aria-label="Pilih brand">${pills}</div>${locs}<nav class="ai-nav" aria-label="Kantor AI">${links}</nav><a class="kai-foot" href="#/ai-office/perbaikan">Permintaan perbaikan</a></aside>`;
+  return `<aside class="ai-side"><div class="kai-pills" role="group" aria-label="Pilih brand">${pills}</div>${locs}<nav class="ai-nav" aria-label="Team Project">${links}</nav><a class="kai-foot" href="#/ai-office/perbaikan">Permintaan perbaikan</a></aside>`;
 }
 
 function cmdBar(esc) {
@@ -358,18 +434,67 @@ function projectList(esc) {
     ${projectCards(esc, visibleProjects())}
     <button type="button" class="btn btn--primary kai-go" data-new="1">Buat project</button>`;
 }
+function crumb(esc) {
+  const bits = [{ brand: 'holdings', label: 'Holdings' }];
+  const project = currentProject();
+  if (st.brand !== 'holdings') {
+    bits.push({ brand: st.brand, loc: st.brand === 'rmoda' ? st.loc : '', label: brandName(st.brand) + (st.brand === 'rmoda' ? ' ' + st.loc : '') });
+  } else if (project) {
+    const b = (project.brands || [])[0];
+    if (b) bits.push({ brand: b.id, loc: b.loc || '', label: brandName(b.id) + (b.loc ? ' ' + b.loc : '') });
+  }
+  if (project) bits.push({ brand: '', label: project.name });
+  if (bits.length === 1 && !st.view) return `<nav class="kai-crumb" aria-label="Jejak"><span class="kai-crumb-now">Holdings</span></nav>`;
+  return `<nav class="kai-crumb" aria-label="Jejak">${bits.map((b, i) => {
+    const label = esc(b.label);
+    const last = i === bits.length - 1;
+    if (last) return `<span class="kai-crumb-now">${label}</span>`;
+    return `<button type="button" data-crumb="${esc(b.brand)}" data-crumb-loc="${esc(b.loc || '')}">${label}</button>`;
+  }).join('<span class="kai-crumb-sep" aria-hidden="true">&gt;</span>')}</nav>`;
+}
 
 function detail(esc) {
   const p = currentProject();
   if (!p) return `<header class="kai-hello"><h2>Project tidak ada</h2><a href="#/ai-office/project">Kembali ke daftar</a></header>`;
-  const pm = AGENTS[p.pm] || AGENTS.cuy;
   const tabs = [['papan', 'Papan'], ['file', 'File & hasil'], ['riwayat', 'Riwayat']].map(([id, label]) =>
     `<button type="button" data-tab="${id}" aria-pressed="${st.tab === id}">${label}</button>`).join('');
   const body = st.tab === 'file' ? files(esc, p) : st.tab === 'riwayat' ? history(esc, p) : board(esc, p);
-  return `<header class="kai-hello"><a class="kai-back" href="#/ai-office/project">Semua project</a>
+  return `<header class="kai-hello">
     <p class="kai-kicker">${esc(scopeLine(p))}</p><h2>${esc(p.name)}</h2>
-    <p>${esc(p.goal)}</p><p class="kai-who">${avatar(p.pm)}<span>PM ${esc(pm.name)} · tenggat ${esc(p.due || 'belum diisi')}</span></p></header>
+    <p>${esc(p.goal)}</p><p class="muted">Tenggat ${esc(p.due || 'belum diisi')}</p></header>
+    ${teamBlock(esc, p)}
     <div class="kai-tabs" role="tablist">${tabs}</div>${body}`;
+}
+function teamBlock(esc, p) {
+  const pm = AGENTS[p.pm] || AGENTS.cuy;
+  const members = (p.agents || []).filter((id) => id && id !== p.pm);
+  const chips = members.map((id) => {
+    const a = AGENTS[id] || AGENTS.lapangan;
+    return `<span class="kai-chip">${avatar(id)}<span><b>${esc(a.name)}</b><small>${esc(a.role)}</small></span><button type="button" class="kai-x" data-lepas="${id}">Lepas</button></span>`;
+  }).join('');
+  const empty = members.length ? '' : '<p class="muted">Belum ada anggota. Tambah agent untuk mulai.</p>';
+  const picker = st.teamEdit === 'add' ? memberPicker(esc, p) : '';
+  const pmBox = st.teamEdit === 'pm' ? `<form class="kai-form" id="kaiPmForm"><label class="kai-field">PM baru<select class="inp" name="pm">${['expi', 'rmo', 'flexo', 'cuy'].map((id) => `<option value="${id}" ${p.pm === id ? 'selected' : ''}>${AGENTS[id].name}</option>`).join('')}</select></label><div class="kai-actions"><button class="btn btn--primary" type="submit">Simpan</button><button type="button" class="btn" data-teamcancel="1">Batal</button></div></form>` : '';
+  return `<section class="kai-teamblock"><h3>Tim</h3>
+    <div class="kai-chips"><span class="kai-chip kai-chip-pm">${avatar(p.pm)}<span><b>${esc(pm.name)}</b><small>PM</small></span></span>${chips}</div>
+    ${empty}
+    ${st.teamEdit ? '' : `<div class="kai-actions"><button type="button" class="btn" data-addagent="1">+ Tambah agent</button><button type="button" class="btn" data-gantipm="1">Ganti PM</button><button type="button" class="btn" data-ask="1">+ Minta agent baru</button></div>`}
+    ${picker}${pmBox}${askBox(esc)}</section>`;
+}
+function memberPicker(esc, p) {
+  const cat = st.cat || 'all';
+  const chosen = new Set(st.pick || []);
+  const filters = CATS.map(([id, label]) => `<button type="button" data-cat="${id}" aria-pressed="${cat === id}">${label}</button>`).join('');
+  const cards = Object.entries(AGENTS).filter(([id, a]) => id !== 'lapangan' && id !== p.pm && (cat === 'all' || a.cat === cat)).map(([id, a]) =>
+    `<article class="kai-agent">${avatar(id)}<b>${esc(a.name)}</b><small>${esc(a.role)}</small>
+      <button type="button" class="btn" data-member="${id}" aria-pressed="${chosen.has(id)}">${chosen.has(id) ? 'Terpilih' : 'Pilih'}</button></article>`).join('');
+  return `<div class="kai-filters">${filters}</div><div class="kai-agents">${cards}<button type="button" class="kai-agent kai-ask" data-ask="1"><b>+ Minta agent baru</b><small>Catatan ke Cuy, bukan agent baru</small></button></div>
+    <div class="kai-actions"><button type="button" class="btn btn--primary" data-saveteam="1">Simpan</button><button type="button" class="btn" data-teamcancel="1">Batal</button></div>`;
+}
+function askBox(esc) {
+  if (!st.ask) return '';
+  const asks = readAsks().slice(0, 2).map((a) => `<p class="muted">${esc(a.note)} · ${esc(a.status)}</p>`).join('');
+  return `<label class="kai-field">Catatan untuk Cuy<textarea class="inp" id="kaiAsk" rows="2" maxlength="240" placeholder="Agent seperti apa yang dibutuhkan?"></textarea></label><button type="button" class="btn" data-asksave="1">Kirim catatan</button>${asks}`;
 }
 
 function board(esc, project) {
@@ -382,29 +507,48 @@ function board(esc, project) {
   return `${head}<div class="kai-board">${cols}</div>`;
 }
 
+function statusBadge(t) {
+  const key = normStatus(t.status);
+  return `<span class="kai-st kai-st--${key}">${STATUS[key] || key}</span>`;
+}
+function reviseBox(esc, id) {
+  if (st.revise !== id) return '';
+  return `<form class="kai-rev" data-revform="${esc(id)}">
+    <label class="kai-field">Apa yang perlu diperbaiki?<textarea class="inp" data-note="${esc(id)}" maxlength="240" rows="3"></textarea><span class="kai-countline"><span data-left>0</span>/240</span></label>
+    ${st.reviseErr === id ? '<p class="kai-err">Tulis dulu apa yang perlu diperbaiki.</p>' : ''}
+    <div class="kai-actions"><button type="submit" class="btn btn--primary">Kirim revisi</button><button type="button" class="btn" data-batal="${esc(id)}">Batal</button></div>
+  </form>`;
+}
+function decide(esc, t) {
+  if (normStatus(t.status) !== 'tunggu') return '';
+  return `<div class="kai-actions"><button type="button" class="btn btn--primary" data-yes="${esc(t.id)}">Setujui</button><button type="button" class="btn" data-no="${esc(t.id)}">Minta revisi</button>${reviseBox(esc, t.id)}</div>`;
+}
 function card(esc, t) {
   const a = AGENTS[t.agent] || AGENTS.lapangan;
+  const key = normStatus(t.status);
   return `<article class="kai-card">
     <header><b>${esc(t.title)}</b><span class="kai-step">${esc(STEPS[t.step] || '')}</span></header>
     <p class="kai-who">${avatar(t.agent)}<span>${esc(a.name)}</span></p>
-    <p class="kai-meta"><span class="kai-st kai-st--${t.status}">${STATUS[t.status]}</span><span>Tenggat ${esc(t.due || '')}</span></p>
+    <p class="kai-meta"><span class="kai-st kai-st--${key}">${STATUS[key]}</span><span>Tenggat ${esc(t.due || '')}</span></p>
+    ${t.status === 'revisi' && t.note ? `<p class="kai-noteview">${esc(t.note)}</p>` : ''}
     <button type="button" class="btn kai-look" data-open="${esc(t.id)}">Lihat hasil</button>
+    ${decide(esc, t)}
   </article>`;
 }
 
 function files(esc, p) {
   const list = tasksOf(p).filter((t) => t.copy || t.script);
   if (!list.length) return '<p class="kai-empty">Belum ada hasil contoh.</p>';
-  return `<div class="kai-list">${list.map((t) => `<article class="kai-approve"><div>${avatar(t.agent)}<div><b>${esc(t.title)}</b><p>${esc(t.copy || t.script)}</p></div></div>
-    <button type="button" class="btn kai-look" data-open="${esc(t.id)}">Lihat hasil</button></article>`).join('')}</div>`;
+  return `<div class="kai-list">${list.map((t) => `<article class="kai-approve"><div>${avatar(t.agent)}<div><b>${esc(t.title)}</b><p>${esc(t.copy || t.script)}</p>${statusBadge(t)}</div></div>
+    <button type="button" class="btn kai-look" data-open="${esc(t.id)}">Lihat hasil</button>${t.status === 'revisi' && t.note ? `<p class="kai-noteview">${esc(t.note)}</p>` : ''}${decide(esc, t)}</article>`).join('')}</div>`;
 }
 
 function history(esc, p) {
-  const list = loadCmds().filter((x) => x.projectId === p.id);
-  if (!list.length) return '<p class="kai-empty">Belum ada perintah di project ini.</p>';
+  const list = logsOf(p.id);
+  if (!list.length) return '<p class="kai-empty">Belum ada aktivitas di project ini.</p>';
   return `<ul class="kai-feed">${list.map((x) => {
     const time = new Date(x.createdAt).toLocaleString('id-ID', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
-    return `<li><span><b>${esc(commandStatus(x))}</b><small> · ${esc(time)}</small><p>${esc(x.text)}</p></span></li>`;
+    return `<li><span><b>${esc(x.text)}</b><small> · ${esc(time)}</small></span></li>`;
   }).join('')}</ul>`;
 }
 
@@ -422,11 +566,7 @@ function approve(esc) {
   const list = waiting();
   const row = (t) => `<article class="kai-approve">
     <div>${avatar(t.agent)}<div><b>${esc(t.title)}</b><p class="muted">${esc(t.project?.name || '')} · ${esc(STEPS[t.step] || '')}</p><p>${esc(t.copy || t.script || 'Belum ada hasil contoh.')}</p></div></div>
-    <div class="kai-actions">
-      <button type="button" class="btn btn--primary" data-yes="${esc(t.id)}">Setujui</button>
-      <button type="button" class="btn" data-no="${esc(t.id)}">Minta revisi</button>
-      ${st.revise === t.id ? `<label class="kai-note">Catatan<textarea class="inp" data-note="${esc(t.id)}" rows="2" maxlength="240" placeholder="Apa yang perlu diperbaiki?"></textarea><button type="button" class="btn" data-save="${esc(t.id)}">Simpan catatan</button></label>` : ''}
-    </div>
+    ${decide(esc, t)}
   </article>`;
   return `<header class="kai-hello"><h2>Perlu persetujuan</h2><p class="muted">Setujui atau minta revisi. Hanya tersimpan di browser ini.</p></header>
     <div class="kai-list">${list.map(row).join('') || '<p class="kai-empty">Tidak ada yang menunggu.</p>'}</div>`;
@@ -505,7 +645,7 @@ function sheet(esc) {
       ${t.copy ? `<section><h3>Teks</h3><p>${esc(t.copy)}</p></section>` : ''}
       ${t.script ? `<section><h3>Script</h3><p>${esc(t.script)}</p></section>` : ''}
       ${!t.copy && !t.script ? '<p class="muted">Hasil contoh belum diisi.</p>' : ''}
-      ${t.status === 'tunggu' ? `<div class="kai-actions"><button type="button" class="btn btn--primary" data-yes="${esc(t.id)}">Setujui</button><button type="button" class="btn" data-no="${esc(t.id)}">Minta revisi</button></div>` : ''}
+      ${decide(esc, t)}
     </aside>`;
 }
 
@@ -528,9 +668,9 @@ function saveProject(draft) {
   const agents = draft.agents.length ? draft.agents : [draft.pm];
   const lead = agents[0] || draft.pm;
   const tasks = [
-    task(id + '-1', { title: 'Riset awal', step: 1, status: 'belum', due: draft.due || 'Minggu ini', agent: agents.includes('mars') ? 'mars' : lead, day: 0, copy: 'Contoh riset untuk project baru.' }),
-    task(id + '-2', { title: 'Kalender', step: 5, status: 'belum', due: draft.due || 'Minggu ini', agent: agents.includes('somia') ? 'somia' : lead, day: 1 }),
-    task(id + '-3', { title: 'Persetujuan', step: 11, status: 'belum', due: draft.due || 'Minggu ini', agent: draft.pm, day: 5, copy: 'Menunggu dilihat Pak. Contoh.' }),
+    task(id + '-1', { title: 'Riset awal', step: 1, status: 'diterima', due: draft.due || 'Minggu ini', agent: agents.includes('mars') ? 'mars' : lead, day: 0, copy: 'Contoh riset untuk project baru.' }),
+    task(id + '-2', { title: 'Kalender', step: 5, status: 'diterima', due: draft.due || 'Minggu ini', agent: agents.includes('somia') ? 'somia' : lead, day: 1 }),
+    task(id + '-3', { title: 'Persetujuan', step: 11, status: 'diterima', due: draft.due || 'Minggu ini', agent: draft.pm, day: 5, copy: 'Menunggu dilihat Pak. Contoh.' }),
   ];
   const item = { id, name: draft.name, goal: draft.goal, due: draft.due, scope: draft.mode, brands: draft.brands, pm: draft.pm, agents, tasks };
   const saved = readJson(PROJ_KEY, []);
@@ -538,6 +678,50 @@ function saveProject(draft) {
   return id;
 }
 
+function approveTask(id) {
+  const found = findTask(id);
+  const map = readWork();
+  map[id] = { ...(map[id] || {}), status: 'selesai', step: 12 };
+  writeJson(WORK_KEY, map);
+  if (found) addLog(found.project.id, 'Pak menyetujui "' + found.task.title + '"');
+  st.drawer = '';
+  st.revise = '';
+  ctx.toast?.('Disetujui');
+  paint();
+}
+function sendRevisi(id, note) {
+  if (!note) { st.reviseErr = id; paint(); return; }
+  const found = findTask(id);
+  const map = readWork();
+  map[id] = { ...(map[id] || {}), status: 'revisi', note };
+  writeJson(WORK_KEY, map);
+  const who = AGENTS[found?.task.agent]?.name || 'agent';
+  if (found) addLog(found.project.id, 'Pak minta revisi "' + found.task.title + '": ' + note);
+  st.revise = '';
+  st.reviseErr = '';
+  ctx.toast?.('Revisi dikirim ke ' + who);
+  paint();
+}
+function saveMembers() {
+  const p = currentProject();
+  if (!p) return;
+  const before = new Set((p.agents || []).filter((id) => id !== p.pm));
+  const next = st.pick || [];
+  next.filter((id) => !before.has(id)).forEach((id) => addLog(p.id, 'Agent ditambah: ' + (AGENTS[id]?.name || id)));
+  saveTeam(p.id, { pm: p.pm, agents: next });
+  st.teamEdit = '';
+  st.pick = null;
+  paint();
+}
+function dropMember(id) {
+  const p = currentProject();
+  if (!p || id === p.pm) return;
+  const name = AGENTS[id]?.name || id;
+  if (!confirm('Lepas ' + name + ' dari project ini?')) return;
+  saveTeam(p.id, { pm: p.pm, agents: (p.agents || []).filter((x) => x !== id && x !== p.pm) });
+  addLog(p.id, 'Agent dilepas: ' + name);
+  paint();
+}
 function arm() {
   clearTimeout(timer);
   if (!document.getElementById('kaiShell') || !ctx) return;
@@ -577,30 +761,74 @@ function bind() {
       location.hash = '#/ai-office/project/' + st.projectId + (tab === 'papan' ? '' : '/' + tab);
     };
   });
-  root.querySelectorAll('[data-yes]').forEach((btn) => {
-    btn.onclick = () => {
-      const map = readWork();
-      map[btn.dataset.yes] = { status: 'selesai', step: 12 };
-      writeJson(WORK_KEY, map);
-      st.drawer = '';
-      paint();
-    };
-  });
+  root.querySelectorAll('[data-yes]').forEach((btn) => { btn.onclick = () => approveTask(btn.dataset.yes); });
   root.querySelectorAll('[data-no]').forEach((btn) => {
-    btn.onclick = () => { st.revise = btn.dataset.no; st.drawer = ''; paint(); };
+    btn.onclick = () => { st.revise = btn.dataset.no; st.reviseErr = ''; paint(); };
   });
-  root.querySelectorAll('[data-save]').forEach((btn) => {
+  root.querySelectorAll('[data-batal]').forEach((btn) => {
+    btn.onclick = () => { st.revise = ''; st.reviseErr = ''; paint(); };
+  });
+  root.querySelectorAll('[data-note]').forEach((box) => {
+    box.oninput = () => {
+      const left = box.parentElement?.querySelector('[data-left]');
+      if (left) left.textContent = String(box.value.length);
+    };
+  });
+  root.querySelectorAll('[data-revform]').forEach((form) => {
+    form.onsubmit = (e) => {
+      e.preventDefault();
+      const box = form.querySelector('[data-note]');
+      sendRevisi(form.dataset.revform, (box?.value || '').replace(/\s+/g, ' ').trim());
+    };
+  });
+  root.querySelectorAll('[data-crumb]').forEach((btn) => {
     btn.onclick = () => {
-      const box = root.querySelector(`[data-note="${btn.dataset.save}"]`);
-      const note = (box?.value || '').replace(/\s+/g, ' ').trim();
-      if (!note) return;
-      const map = readWork();
-      map[btn.dataset.save] = { status: 'revisi', note };
-      writeJson(WORK_KEY, map);
-      st.revise = '';
+      const id = btn.dataset.crumb;
+      st.drawer = '';
+      st.form = null;
+      st.teamEdit = '';
+      st.projectId = '';
+      if (!id || id === 'holdings') st.brand = 'holdings';
+      else { st.brand = id; if (btn.dataset.crumbLoc) st.loc = btn.dataset.crumbLoc; }
+      if (location.hash !== '#/ai-office') location.hash = '#/ai-office';
+      else paint();
+    };
+  });
+  root.querySelectorAll('[data-addagent]').forEach((btn) => {
+    btn.onclick = () => {
+      const p = currentProject();
+      st.teamEdit = 'add';
+      st.pick = (p?.agents || []).filter((id) => id !== p?.pm);
+      st.ask = false;
       paint();
     };
   });
+  root.querySelectorAll('[data-gantipm]').forEach((btn) => { btn.onclick = () => { st.teamEdit = 'pm'; st.ask = false; paint(); }; });
+  root.querySelectorAll('[data-teamcancel]').forEach((btn) => { btn.onclick = () => { st.teamEdit = ''; st.pick = null; paint(); }; });
+  root.querySelectorAll('[data-member]').forEach((btn) => {
+    btn.onclick = () => {
+      const id = btn.dataset.member;
+      const list = st.pick || [];
+      st.pick = list.includes(id) ? list.filter((x) => x !== id) : [...list, id];
+      paint();
+    };
+  });
+  root.querySelectorAll('[data-saveteam]').forEach((btn) => { btn.onclick = () => saveMembers(); });
+  root.querySelectorAll('[data-lepas]').forEach((btn) => { btn.onclick = () => dropMember(btn.dataset.lepas); });
+  const pmForm = root.querySelector('#kaiPmForm');
+  if (pmForm) {
+    pmForm.onsubmit = (e) => {
+      e.preventDefault();
+      const p = currentProject();
+      if (!p) return;
+      const pm = new FormData(pmForm).get('pm');
+      if (!pm || pm === p.pm) { st.teamEdit = ''; paint(); return; }
+      saveTeam(p.id, { pm, agents: (p.agents || []).filter((id) => id !== pm) });
+      addLog(p.id, 'PM diganti: ' + (AGENTS[pm]?.name || pm));
+      st.teamEdit = '';
+      paint();
+    };
+  }
   root.querySelectorAll('[data-live]').forEach((btn) => {
     btn.onclick = () => {
       const list = readWebo().map((item) => (item.id === btn.dataset.live ? { ...item, status: 'Live' } : item));
@@ -628,6 +856,7 @@ function bind() {
   root.querySelectorAll('[data-cat]').forEach((btn) => { btn.onclick = () => { st.cat = btn.dataset.cat; paint(); }; });
   root.querySelectorAll('[data-pick]').forEach((btn) => {
     btn.onclick = () => {
+      if (!st.form) return;
       const id = btn.dataset.pick;
       const has = st.form.agents.includes(id);
       st.form.agents = has ? st.form.agents.filter((x) => x !== id) : [...st.form.agents, id];
@@ -671,10 +900,10 @@ function bind() {
 function paint() {
   const { esc, setHead } = ctx;
   const titles = { project: 'Project', kalender: 'Kalender', setuju: 'Perlu persetujuan', perbaikan: 'Permintaan perbaikan' };
-  setHead(st.form ? 'Buat project' : st.projectId ? (currentProject()?.name || 'Project') : (st.brand === 'holdings' && !st.view ? 'Holdings' : (titles[st.view] || 'Kantor AI')));
+  setHead(st.form ? 'Buat project' : st.projectId ? (currentProject()?.name || 'Project') : (st.brand === 'holdings' && !st.view ? 'Holdings' : (titles[st.view] || 'Team Project')));
   const root = document.getElementById('view');
   if (!root) return;
-  const body = st.form ? formView(esc)
+  const page = st.form ? formView(esc)
     : st.projectId ? detail(esc)
       : st.view === 'project' ? projectList(esc)
         : st.view === 'kalender' ? calendar(esc)
@@ -682,6 +911,7 @@ function paint() {
             : st.view === 'perbaikan' ? fixes(esc)
               : home(esc);
   const showCmd = !st.form && st.view !== 'perbaikan';
+  const body = (st.form ? '' : crumb(esc)) + page;
   root.innerHTML = `<div class="kai-shell" id="kaiShell" data-kai="${st.brand}">${side(esc)}<div class="kai-main"><div class="kai-scroll">${body}</div>${showCmd ? cmdBar(esc) : ''}</div>${sheet(esc)}</div>`;
   bind();
 }
@@ -695,5 +925,10 @@ export function viewAiOffice(next) {
   st.form = null;
   st.drawer = '';
   st.ask = false;
+  st.teamEdit = '';
+  st.pick = null;
+  st.revise = '';
+  st.reviseErr = '';
   paint();
 }
+migrateWork();

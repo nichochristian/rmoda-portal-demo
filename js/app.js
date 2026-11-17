@@ -1,10 +1,10 @@
 import { api, DEMO, LEVELS, LEVEL_LABEL, buildPerms, acceptImports } from './api.js?v=45';
 import { viewWork } from './work.js?v=45';
 import { viewCrm } from './crm.js?v=42';
-import { viewAiOffice, addFixReport } from './ai-office.js?v=56';
+import { viewAiOffice, addFixReport } from './ai-office.js?v=57';
 
 // Satu nomor versi untuk semua file, supaya browser tidak menyimpan salinan lama.
-const MV = 56;
+const MV = 57;
 const LAZY = {
   setoran: { view: 'viewSetoran', home: 'setoranHomeSummary', css: true },
   hrd:     { view: 'viewHrd',     home: 'hrdHomeSummary',     css: true },
@@ -191,8 +191,8 @@ function brandNavHtml() {
       ${navLink('peran', 'roles', 'Daftar Peran')}
       ${navLink('undangan', 'invite', 'Undangan &amp; Impor')}
       ${p.owner ? navLink('aktivitas', 'audit', 'Aktivitas') + navLink('export', 'export', 'Export data') : ''}` : ''}
-    <p class="nav__h nav__space">Kantor AI</p>
-    ${navLink('ai-office', 'ai', 'Kantor AI')}
+    <p class="nav__h nav__space">Team Project</p>
+    ${navLink('ai-office', 'ai', 'Team Project')}
     <a class="nav__a nav__quiet" href="#/ai-office/perbaikan" data-route="ai-office/perbaikan"><span>Permintaan perbaikan</span></a>`;
 }
 function paintBrandBtn() {
@@ -252,14 +252,14 @@ function paletteEntries() {
     }
   }
   [
-    ['', 'Beranda Kantor AI', 'holdings ringkasan'],
+    ['', 'Beranda Team Project', 'holdings ringkasan'],
     ['project', 'Project', 'buat project'],
     ['kalender', 'Kalender', 'minggu iklan'],
     ['setuju', 'Perlu persetujuan', 'approval pak'],
     ['perbaikan', 'Permintaan perbaikan', 'webo lapor'],
   ].forEach(([sub, label, extra]) => rows.push({
-    group: 'Kantor AI', label, hint: 'Kantor AI', href: '#/ai-office' + (sub ? '/' + sub : ''),
-    key: ('kantor ai ' + label + ' ' + extra + ' expi rmo academy supplies makassar').toLowerCase(),
+    group: 'Team Project', label, hint: 'Team Project', href: '#/ai-office' + (sub ? '/' + sub : ''),
+    key: ('team project ' + label + ' ' + extra + ' expi rmo academy supplies makassar').toLowerCase(),
   }));
   if (p.can('admin', null, 'view')) {
     rows.push({ group: 'Kelola', label: 'Tim & Peran', hint: 'Pengguna', href: '#/tim', brand: S.brand, key: 'tim peran pengguna' });
@@ -492,7 +492,7 @@ function route() {
   closeSide();
   closeBrandPop();
   const [page, arg] = h.split('/');
-  const views = { beranda: viewHome, m: viewModule, tim: viewMembers, peran: viewRoles, undangan: viewImports, aktivitas: viewAudit, export: viewExport, 'ai-office': (sub) => viewAiOffice({ $, esc, setHead }, sub) };
+  const views = { beranda: viewHome, m: viewModule, tim: viewMembers, peran: viewRoles, undangan: viewImports, aktivitas: viewAudit, export: viewExport, 'ai-office': (sub) => viewAiOffice({ $, esc, setHead, toast }, sub) };
   const view = $('#view');
   if (view) view.classList.remove('is-in');
   (views[page] || viewHome)(arg);
@@ -555,7 +555,7 @@ async function viewHome() {
         <h3 class="home-h">Langkah cepat</h3>
         <div class="quick">
           ${actions.map(it => `<a href="#/${it.href}">${icon(it.icon)}<span><b>${esc(it.label)}</b><small>Buka modul</small></span></a>`).join('')}
-          <a href="#/ai-office">${icon('ai')}<span><b>Kantor AI</b><small>Pantau dan setujui</small></span></a>
+          <a href="#/ai-office">${icon('ai')}<span><b>Team Project</b><small>Kerja per project bersama tim agent</small></span></a>
           ${brand.id === 'rmoda' && p.can('work') ? `<button type="button" id="homeNew">${icon('work')}<span><b>Mobil baru</b><small>Catat di papan, tombol C</small></span></button>` : ''}
           <button type="button" id="homeSearch">${icon('docs')}<span><b>Cari modul</b><small>${KBD}</small></span></button>
           ${brand.id === 'rmoda' && p.can('admin', null, 'view') ? `<a href="#/tim">${icon('admin')}<span><b>Tim</b><small id="qMembers">Pengguna</small></span></a>` : ''}
