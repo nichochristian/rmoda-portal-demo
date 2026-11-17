@@ -1,10 +1,10 @@
 import { api, DEMO, LEVELS, LEVEL_LABEL, buildPerms, acceptImports } from './api.js?v=45';
 import { viewWork } from './work.js?v=45';
 import { viewCrm } from './crm.js?v=42';
-import { viewAiOffice } from './ai-office.js?v=54';
+import { viewAiOffice, addFixReport } from './ai-office.js?v=55';
 
 // Satu nomor versi untuk semua file, supaya browser tidak menyimpan salinan lama.
-const MV = 54;
+const MV = 55;
 const LAZY = {
   setoran: { view: 'viewSetoran', home: 'setoranHomeSummary', css: true },
   hrd:     { view: 'viewHrd',     home: 'hrdHomeSummary',     css: true },
@@ -37,6 +37,7 @@ const ICON = {
   export: '<path d="M12 3v12M7 10l5 5 5-5M4 21h16"/>',
   out: '<path d="M15 4h4v16h-4M10 8l-4 4 4 4M6 12h10"/>',
   ai: '<circle cx="7" cy="8" r="2.2"/><circle cx="17" cy="8" r="2.2"/><circle cx="12" cy="16.5" r="2.2"/><path d="M8.8 9.4 11 14.2M15.2 9.4 13 14.2"/>',
+  flag: '<path d="M5 3v18M5 4h11l-2 4 2 4H5"/>',
 };
 const icon = (k) => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICON[k] || ''}</svg>`;
 
@@ -191,7 +192,8 @@ function brandNavHtml() {
       ${navLink('undangan', 'invite', 'Undangan &amp; Impor')}
       ${p.owner ? navLink('aktivitas', 'audit', 'Aktivitas') + navLink('export', 'export', 'Export data') : ''}` : ''}
     <p class="nav__h nav__space">Kantor AI</p>
-    ${navLink('ai-office', 'ai', 'Kantor AI')}`;
+    ${navLink('ai-office', 'ai', 'Kantor AI')}
+    <a class="nav__a nav__quiet" href="#/ai-office/perbaikan" data-route="ai-office/perbaikan"><span>Permintaan perbaikan</span></a>`;
 }
 function paintBrandBtn() {
   const b = currentBrand();
@@ -229,6 +231,7 @@ function syncNav() {
     if (r === 'm/work/sa') on = h === 'm/work/sa';
     else if (r === 'm/work') on = h === 'm/work';
     else if (r === 'beranda') on = h === 'beranda';
+    else if (r === 'ai-office') on = h === 'ai-office' || (h.startsWith('ai-office/') && !h.startsWith('ai-office/perbaikan'));
     else on = h === r || h.startsWith(r + '/');
     a.classList.toggle('on', on);
   });
@@ -249,10 +252,11 @@ function paletteEntries() {
     }
   }
   [
-    ['', 'Beranda Kantor AI', 'ringkasan'],
-    ['alur', 'Alur konten', 'papan ide produksi'],
+    ['', 'Beranda Kantor AI', 'holdings ringkasan'],
+    ['project', 'Project', 'buat project'],
     ['kalender', 'Kalender', 'minggu iklan'],
     ['setuju', 'Perlu persetujuan', 'approval pak'],
+    ['perbaikan', 'Permintaan perbaikan', 'webo lapor'],
   ].forEach(([sub, label, extra]) => rows.push({
     group: 'Kantor AI', label, hint: 'Kantor AI', href: '#/ai-office' + (sub ? '/' + sub : ''),
     key: ('kantor ai ' + label + ' ' + extra + ' expi rmo academy supplies makassar').toLowerCase(),
@@ -329,6 +333,7 @@ function renderShell() {
         <button class="iconbtn only-m" id="menu" aria-label="Menu"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
         <div class="top__title"><p class="top__kicker" id="kicker">${esc(b.name)}</p><h1 id="title"></h1></div>
         <button class="cmdk" id="cmdOpen" type="button" aria-label="Cari atau lompat"><svg class="cmdk__ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="6"/><path d="m20 20-3.5-3.5"/></svg><span>Cari atau lompat</span><kbd>${KBD}</kbd></button>
+        <button class="iconbtn" id="fixBtn" type="button" title="Lapor perbaikan" aria-label="Lapor perbaikan">${icon('flag')}</button>
         <button class="iconbtn" id="themeBtn" type="button"></button>
         <div id="actions"></div>
       </header>
@@ -359,6 +364,7 @@ function renderShell() {
   $('#dockSearch').onclick = openPalette;
   $('#dockMenu').onclick = () => { $('#side').classList.add('open'); $('#scrim').hidden = false; };
   $('#themeBtn').onclick = () => applyTheme(document.documentElement.dataset.theme === 'light' ? 'dark' : 'light');
+  $('#fixBtn').onclick = openFixSheet;
   paintThemeBtn();
   $('#brandBtn').onclick = () => {
     const pop = $('#brandPop'), open = pop.hidden;
@@ -403,6 +409,47 @@ function renderShell() {
   });
   document.addEventListener('portal:nav', syncNav);
   syncNav();
+}
+
+function openFixSheet() {
+  document.getElementById('fixRoot')?.remove();
+  const page = ($('#title')?.textContent || 'Beranda') + (location.hash ? ' ' + location.hash : '');
+  const wide = window.innerWidth >= 860;
+  const device = (wide ? 'Desktop' : 'HP') + ' ' + window.innerWidth + 'x' + window.innerHeight;
+  const holder = document.createElement('div');
+  holder.id = 'fixRoot';
+  holder.innerHTML = `<div class="kai-shade" data-fixclose="1"></div>
+    <aside class="kai-sheet" role="dialog" aria-modal="true" aria-label="Lapor perbaikan">
+      <header><div><p class="kai-step">Antrean Webo</p><h2>Lapor perbaikan</h2><p class="muted">Contoh. Tersimpan di browser ini saja.</p></div>
+      <button type="button" class="iconbtn" data-fixclose="1" aria-label="Tutup">×</button></header>
+      <label class="kai-field">Halaman<input class="inp" id="fixPage" value="${esc(page)}" maxlength="120"></label>
+      <label class="kai-field">Perangkat<input class="inp" id="fixDevice" value="${esc(device)}" maxlength="80"></label>
+      <label class="kai-field">Screenshot<input class="inp" id="fixFile" type="file" accept="image/*"></label>
+      <p class="muted" id="fixFileName">Nama file saja yang disimpan.</p>
+      <label class="kai-field">Catatan<textarea class="inp" id="fixNote" rows="3" maxlength="400" placeholder="Apa yang perlu diperbaiki?"></textarea></label>
+      <fieldset class="kai-field"><legend>Prioritas</legend>
+        <label><input type="radio" name="fixPri" value="Biasa" checked> Biasa</label>
+        <label><input type="radio" name="fixPri" value="Penting"> Penting</label>
+      </fieldset>
+      <button type="button" class="btn btn--primary" id="fixSave">Simpan laporan</button>
+    </aside>`;
+  document.body.appendChild(holder);
+  const file = holder.querySelector('#fixFile');
+  file.onchange = () => { holder.querySelector('#fixFileName').textContent = file.files?.[0]?.name || 'Nama file saja yang disimpan.'; };
+  holder.querySelectorAll('[data-fixclose]').forEach((el) => { el.onclick = () => holder.remove(); });
+  holder.querySelector('#fixSave').onclick = () => {
+    const note = holder.querySelector('#fixNote').value.replace(/\s+/g, ' ').trim();
+    if (!note) { holder.querySelector('#fixNote').focus(); return; }
+    const pri = holder.querySelector('input[name="fixPri"]:checked')?.value || 'Biasa';
+    addFixReport({
+      page: holder.querySelector('#fixPage').value.replace(/\s+/g, ' ').trim() || 'Beranda',
+      device: holder.querySelector('#fixDevice').value.replace(/\s+/g, ' ').trim() || device,
+      file: file.files?.[0]?.name || '',
+      note, priority: pri,
+    });
+    holder.remove();
+    toast('Masuk antrean Webo. Status Diterima.');
+  };
 }
 
 function setHead(title, actions = '') {

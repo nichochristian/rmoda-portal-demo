@@ -1071,6 +1071,8 @@ html[data-theme="light"] .palette { background: color-mix(in srgb, #1a1814 38%, 
 .kai-shell[data-kai="academy"] { --accent: #5c636e; --accent-ink: #fff; --accent-soft: rgba(92, 99, 110, 0.16); }
 .kai-shell[data-kai="supplies"] { --accent: #fdd205; --accent-ink: #14120a; --accent-soft: rgba(253, 210, 5, 0.28); }
 .kai-shell[data-kai="rmoda"] { --accent: #e10600; --accent-ink: #fff; --accent-soft: rgba(225, 6, 0, 0.14); }
+.kai-shell[data-kai="holdings"] { --accent: #3f4553; --accent-ink: #fff; --accent-soft: rgba(63, 69, 83, 0.18); }
+.kai-shell[data-kai="holdings"] .kai-kicker { color: #3f4553; }
 .ai-side {
   position: sticky; top: 72px; display: grid; gap: 10px; align-content: start;
   color-scheme: dark; color: #f4f2ec; background: #121318;
@@ -1087,6 +1089,9 @@ html[data-theme="light"] .palette { background: color-mix(in srgb, #1a1814 38%, 
 }
 .kai-pills button[aria-pressed="true"], .kai-locs button[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); border-color: transparent; }
 .kai-pills button:disabled { opacity: 0.55; cursor: not-allowed; }
+.kai-hold { grid-column: 1 / -1; }
+.kai-foot { color: var(--ink-2); font-size: 12.5px; font-weight: 600; padding: 4px 2px; }
+.nav__quiet { min-height: 32px; font-size: 12.5px; color: var(--ink-3); }
 .ai-nav { display: grid; gap: 4px; }
 .ai-nav a { display: flex; align-items: center; gap: 8px; min-height: 40px; padding: 0 10px; border-radius: 10px; color: var(--ink-2); font-weight: 600; }
 .ai-nav a svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
@@ -1153,6 +1158,30 @@ html[data-theme="light"] .palette { background: color-mix(in srgb, #1a1814 38%, 
 .kai-note { display: grid; gap: 6px; flex: 1 1 100%; font-weight: 600; }
 .kai-note textarea { min-height: 64px; padding: 8px 10px; }
 .kai-empty { margin: 0; }
+.kai-projects { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 12px; }
+.kai-pcard, .kai-brand { display: grid; gap: 6px; background: #fff; border: 1px solid var(--line); border-radius: 14px; padding: 14px; color: inherit; }
+.kai-pcard p, .kai-brand p { margin: 0; }
+.kai-prog { height: 6px; border-radius: 99px; background: #e7e2d8; overflow: hidden; }
+.kai-prog i { display: block; height: 100%; background: var(--accent); }
+.kai-faces { display: flex; gap: 4px; }
+.kai-holdgrid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+.kai-brand header, .kai-pcard header { display: flex; justify-content: space-between; gap: 8px; align-items: start; }
+.kai-brand small, .kai-feed small { color: var(--ink-2); }
+.kai-feed { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.kai-feed li { display: flex; gap: 8px; align-items: flex-start; background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 10px; }
+.kai-feed p { margin: 2px 0 0; }
+.kai-back { font-size: 13px; font-weight: 650; color: var(--ink-2); }
+.kai-tabs, .kai-filters { display: flex; flex-wrap: wrap; gap: 6px; }
+.kai-tabs button, .kai-filters button { min-height: 34px; border-radius: 999px; border: 1px solid var(--line-strong); background: #fff; color: var(--ink); font: inherit; font-weight: 650; padding: 0 12px; cursor: pointer; }
+.kai-tabs button[aria-pressed="true"], .kai-filters button[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); border-color: transparent; }
+.kai-form, .kai-field { display: grid; gap: 6px; }
+.kai-field { font-weight: 650; }
+.kai-checks { display: flex; flex-wrap: wrap; gap: 8px 14px; }
+.kai-agents { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; }
+.kai-agent { display: grid; justify-items: start; gap: 4px; background: #fff; border: 1px solid var(--line); border-radius: 14px; padding: 12px; text-align: left; }
+.kai-ask { cursor: pointer; border-style: dashed; color: inherit; font: inherit; }
+.kai-block { display: grid; gap: 10px; }
+.kai-block h3 { margin: 0; font-size: 15px; }
 .kai-scroll { display: grid; gap: 16px; align-content: start; min-width: 0; min-height: 0; padding-bottom: var(--kai-gap, 12px); scroll-padding-bottom: var(--kai-gap, 12px); }
 .kai-cmd { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 8px; align-items: center; position: static; background: #fff; border: 1px solid var(--line); border-radius: 14px; padding: 8px; }
 body:has(.kai-sheet) .kai-cmd { visibility: hidden; }
@@ -1180,11 +1209,12 @@ body:has(.kai-shell) .top { position: static; }
 .content:has(.kai-shell) {
   --kai-dock: 0px; --kai-bar: 56px; --kai-gap: 12px;
   flex: 1 1 auto; min-height: 0; height: auto; overflow: hidden;
+  padding-top: 14px;
   display: grid; grid-template-rows: minmax(0, 1fr);
   padding-bottom: calc(var(--kai-dock) + env(safe-area-inset-bottom));
 }
 .kai-shell { height: 100%; min-height: 0; align-items: stretch; }
-.kai-main { height: 100%; min-height: 0; grid-template-rows: minmax(0, 1fr) auto; align-content: stretch; overflow: hidden; }
+.kai-main { height: 100%; min-height: 0; grid-template-rows: minmax(0, 1fr) auto; align-content: stretch; overflow: hidden; padding: 14px 16px 8px; }
 .kai-scroll { overflow: auto; }
 .kai-cmd { min-height: var(--kai-bar); }
 @media (min-width: 861px) {
@@ -1201,8 +1231,11 @@ body:has(.kai-shell) .top { position: static; }
   .kai-card { padding: 6px; gap: 4px; }
   .kai-look { min-height: 32px; }
   .kai-pills { grid-template-columns: 1fr 1fr; }
+  .kai-projects, .kai-holdgrid, .kai-agents { grid-template-columns: 1fr 1fr; }
+  .kai-holdgrid { grid-template-columns: 1fr; }
   .kai-shell { grid-template-columns: 1fr; grid-template-rows: auto minmax(0, 1fr); gap: 8px; }
   .ai-side { position: static; max-height: none; overflow: visible; padding: 8px; }
+  .kai-foot { display: none; }
   .kai-hello h2 { white-space: normal; }
   .kai-metrics { grid-template-columns: 1fr; }
   .kai-metrics article { padding: 8px 12px; }
