@@ -1200,6 +1200,7 @@ html[data-theme="light"] .palette { background: color-mix(in srgb, #1a1814 38%, 
 .kai-block h3 { margin: 0; font-size: 15px; }
 .kai-scroll { display: grid; gap: 16px; align-content: start; min-width: 0; min-height: 0; padding-bottom: calc(var(--kai-bar, 56px) + var(--kai-gap, 12px)); scroll-padding-bottom: calc(var(--kai-bar, 56px) + var(--kai-gap, 12px)); }
 .kai-cmd { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 8px; align-items: center; position: static; background: #fff; border: 1px solid var(--line); border-radius: 14px; padding: 8px; }
+.kai-pill, .kai-cmdclose { display: none; }
 body:has(.kai-sheet) .kai-cmd { visibility: hidden; }
 .kai-demo { font-size: 12px; font-weight: 700; color: #7a5e00; background: #fdf1d5; border-radius: 999px; padding: 4px 8px; white-space: nowrap; }
 .kai-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0, 0, 0, 0); }
@@ -1291,6 +1292,44 @@ body:has(.kai-shell) .top { position: static; }
   .kai-cmd .inp, .kai-cmd .btn { height: 36px; min-height: 36px; }
   .kai-sheet { top: auto; left: 0; width: 100%; max-height: min(70vh, 560px); border-radius: 16px 16px 0 0; bottom: calc(61px + env(safe-area-inset-bottom)); }
   .kai-sheet.fix-sheet { top: env(safe-area-inset-top); right: 0; bottom: 0; left: 0; width: 100%; height: auto; max-height: calc(100dvh - env(safe-area-inset-top) - env(safe-area-inset-bottom)); border-radius: 16px 16px 0 0; z-index: 80; }
+}
+@media (max-width: 640px) {
+  .content:has(.kai-shell) {
+    --kai-dock: 61px;
+    --kai-pill: 40px;
+    --kai-gap: 16px;
+    padding-top: 4px;
+    padding-bottom: calc(var(--kai-dock) + var(--kai-pill) + var(--kai-gap) + env(safe-area-inset-bottom));
+  }
+  .kai-main { grid-template-rows: minmax(0, 1fr); gap: 0; padding: 4px 12px 4px; }
+  .kai-shell { gap: 6px; }
+  .kai-scroll { gap: 8px; padding-bottom: 16px; scroll-padding-bottom: 16px; }
+  .kai-list { gap: 8px; }
+  .kai-approve { padding: 8px 10px; gap: 6px; }
+  .kai-hello h2 { font-size: 20px; }
+  .kai-cmdhost { position: absolute; width: 0; height: 0; overflow: visible; }
+  .kai-pill {
+    display: inline-flex; align-items: center; justify-content: center;
+    position: fixed; z-index: 36; right: 12px; white-space: nowrap;
+    bottom: calc(var(--kai-dock) + 4px + env(safe-area-inset-bottom));
+    height: var(--kai-pill); max-width: min(220px, calc(100vw - 24px));
+    padding: 0 14px; border: 0; border-radius: 999px;
+    background: #1a1814; color: #f4f2ec; font: inherit; font-size: 13px; font-weight: 700;
+    box-shadow: 0 6px 16px rgba(20, 16, 10, 0.28); cursor: pointer;
+  }
+  .kai-pill[hidden] { display: none; }
+  body:has(.kai-sheet) .kai-pill { visibility: hidden; }
+  .kai-cmd { display: none; }
+  .kai-cmd.is-open {
+    display: grid; position: fixed; z-index: 70;
+    left: 0; right: 0;
+    bottom: calc(var(--kai-dock) + env(safe-area-inset-bottom));
+    grid-template-columns: auto minmax(0, 1fr) auto auto;
+    width: auto; height: auto; max-height: none; min-height: 0;
+    padding: 12px; border-radius: 16px 16px 0 0;
+    box-shadow: 0 -10px 28px rgba(20, 16, 10, 0.16);
+  }
+  .kai-cmd.is-open .kai-cmdclose { display: inline-flex; }
 }
 @media (hover: hover) and (pointer: fine) {
   .kai-card, .kai-approve, .kai-metrics article { transition: transform .18s var(--ease); }

@@ -129,7 +129,7 @@ const WEBO_SEED = [
   { id: 'w3', page: 'Beranda', device: 'HP 390x844', file: '', note: 'Angka ringkasan sudah dicek Pak.', priority: 'Biasa', status: 'Diterima', createdAt: 3 },
 ];
 
-const st = { brand: 'academy', loc: 'Makassar', view: '', projectId: '', tab: 'papan', drawer: '', revise: '', reviseErr: '', form: null, ask: false, cat: 'all', teamEdit: '', pick: null };
+const st = { brand: 'academy', loc: 'Makassar', view: '', projectId: '', tab: 'papan', drawer: '', revise: '', reviseErr: '', form: null, ask: false, cat: 'all', teamEdit: '', pick: null, cmdOpen: false };
 let ctx = null;
 let timer = 0;
 
@@ -351,14 +351,18 @@ function cmdBar(esc) {
   const brand = commandBrand(project);
   const last = loadCmds().find((x) => (project ? x.projectId === project.id : x.brand === brand));
   const chip = last ? commandChip(last) : 'Demo';
-  const narrow = window.matchMedia('(max-width: 860px)').matches;
+  const narrow = window.matchMedia('(max-width: 640px)').matches;
   const ph = narrow ? 'Tulis perintah...' : `Perintah ke ${who}...`;
-  return `<form class="kai-cmd" data-brand="${brand}" data-project="${project ? project.id : ''}">
-    <span class="kai-demo" id="kaiDemo" title="Contoh. Belum dikirim ke agen sungguhan.">${esc(chip === 'Demo' ? 'Demo' : chip)}</span>
-    <label class="kai-sr" for="kaiCmd">Perintah</label>
-    <input class="inp" id="kaiCmd" maxlength="500" placeholder="${ph}" aria-describedby="kaiDemo">
-    <button class="btn" type="submit">Kirim</button>
-  </form>`;
+  return `<div class="kai-cmdhost">
+    <button type="button" class="kai-pill" data-cmdopen ${st.cmdOpen ? 'hidden' : ''}>Perintah ke ${esc(who)}</button>
+    <form class="kai-cmd${st.cmdOpen ? ' is-open' : ''}" data-brand="${brand}" data-project="${project ? project.id : ''}">
+      <span class="kai-demo" id="kaiDemo" title="Contoh. Belum dikirim ke agen sungguhan.">${esc(chip === 'Demo' ? 'Demo' : chip)}</span>
+      <label class="kai-sr" for="kaiCmd">Perintah</label>
+      <input class="inp" id="kaiCmd" maxlength="500" placeholder="${ph}" aria-describedby="kaiDemo">
+      <button type="button" class="btn kai-cmdclose" data-cmdclose>Tutup</button>
+      <button class="btn" type="submit">Kirim</button>
+    </form>
+  </div>`;
 }
 
 function home(esc) {
@@ -690,7 +694,7 @@ function approveTask(id) {
   paint();
 }
 function sendRevisi(id, note) {
-  if (!note) { st.reviseErr = id; paint(); return; }
+  if (!note) { st.reviseErr = id; paint({ keepScroll: true, focusRev: true }); return; }
   const found = findTask(id);
   const map = readWork();
   map[id] = { ...(map[id] || {}), status: 'revisi', note };
@@ -763,10 +767,10 @@ function bind() {
   });
   root.querySelectorAll('[data-yes]').forEach((btn) => { btn.onclick = () => approveTask(btn.dataset.yes); });
   root.querySelectorAll('[data-no]').forEach((btn) => {
-    btn.onclick = () => { st.revise = btn.dataset.no; st.reviseErr = ''; paint(); };
+    btn.onclick = () => { st.revise = btn.dataset.no; st.reviseErr = ''; paint({ keepScroll: true, focusRev: true }); };
   });
   root.querySelectorAll('[data-batal]').forEach((btn) => {
-    btn.onclick = () => { st.revise = ''; st.reviseErr = ''; paint(); };
+    btn.onclick = () => { st.revise = ''; st.reviseErr = ''; paint({ keepScroll: true }); };
   });
   root.querySelectorAll('[data-note]').forEach((box) => {
     box.oninput = () => {
@@ -881,6 +885,12 @@ function bind() {
       location.hash = '#/ai-office/project/' + id;
     };
   });
+  root.querySelectorAll('[data-cmdopen]').forEach((btn) => {
+    btn.onclick = () => { st.cmdOpen = true; paint({ keepScroll: true }); const box = document.getElementById('kaiCmd'); if (box) box.focus({ preventScroll: true }); };
+  });
+  root.querySelectorAll('[data-cmdclose]').forEach((btn) => {
+    btn.onclick = () => { st.cmdOpen = false; paint({ keepScroll: true }); };
+  });
   const form = root.querySelector('.kai-cmd');
   if (form) {
     form.onsubmit = async (e) => {
@@ -891,13 +901,33 @@ function bind() {
       if (!res.ok) { if (demo) demo.textContent = res.error; return; }
       box.value = '';
       if (demo) demo.textContent = 'Terkirim (demo)';
+      st.cmdOpen = false;
+      paint({ keepScroll: true });
       arm();
     };
   }
   arm();
 }
 
-function paint() {
+function placeRevise(sc) {
+  const form = document.querySelector('.kai-rev');
+  if (!form) return;
+  const board = form.closest('.kai-board');
+  const col = form.closest('.kai-col');
+  if (board && col) board.scrollLeft = Math.max(0, col.offsetLeft - 8);
+  if (sc) {
+    const pad = parseFloat(getComputedStyle(sc).scrollPaddingBottom) || 0;
+    const view = sc.getBoundingClientRect();
+    const rect = form.getBoundingClientRect();
+    const limit = view.bottom - pad;
+    if (rect.bottom > limit) sc.scrollTop += rect.bottom - limit + 8;
+    else if (rect.top < view.top) sc.scrollTop -= view.top - rect.top + 8;
+  }
+  form.querySelector('textarea')?.focus({ preventScroll: true });
+}
+function paint(opts) {
+  const prev = document.querySelector('.kai-scroll');
+  const keep = opts && opts.keepScroll && prev ? prev.scrollTop : null;
   const { esc, setHead } = ctx;
   const titles = { project: 'Project', kalender: 'Kalender', setuju: 'Perlu persetujuan', perbaikan: 'Permintaan perbaikan' };
   setHead(st.form ? 'Buat project' : st.projectId ? (currentProject()?.name || 'Project') : (st.brand === 'holdings' && !st.view ? 'Holdings' : (titles[st.view] || 'Team Project')));
@@ -914,6 +944,9 @@ function paint() {
   const body = (st.form ? '' : crumb(esc)) + page;
   root.innerHTML = `<div class="kai-shell" id="kaiShell" data-kai="${st.brand}">${side(esc)}<div class="kai-main"><div class="kai-scroll">${body}</div>${showCmd ? cmdBar(esc) : ''}</div>${sheet(esc)}</div>`;
   bind();
+  const sc = document.querySelector('.kai-scroll');
+  if (sc && keep != null) sc.scrollTop = keep;
+  if (opts && opts.focusRev) placeRevise(sc);
 }
 
 export function viewAiOffice(next) {
