@@ -275,11 +275,12 @@ function cmdBar(esc) {
   const brand = commandBrand(project);
   const last = loadCmds().find((x) => (project ? x.projectId === project.id : x.brand === brand));
   const chip = last ? commandChip(last) : 'Demo';
-  const place = project ? ` di project ${project.name}` : (st.brand === 'rmoda' ? ' untuk ' + st.loc : '');
+  const narrow = window.matchMedia('(max-width: 860px)').matches;
+  const ph = narrow ? 'Tulis perintah...' : `Perintah ke ${who}...`;
   return `<form class="kai-cmd" data-brand="${brand}" data-project="${project ? project.id : ''}">
     <span class="kai-demo" id="kaiDemo" title="Contoh. Belum dikirim ke agen sungguhan.">${esc(chip === 'Demo' ? 'Demo' : chip)}</span>
     <label class="kai-sr" for="kaiCmd">Perintah</label>
-    <input class="inp" id="kaiCmd" maxlength="500" placeholder="Perintah untuk ${who}${place}..." aria-describedby="kaiDemo">
+    <input class="inp" id="kaiCmd" maxlength="500" placeholder="${ph}" aria-describedby="kaiDemo">
     <button class="btn" type="submit">Kirim</button>
   </form>`;
 }
@@ -403,7 +404,7 @@ function history(esc, p) {
   if (!list.length) return '<p class="kai-empty">Belum ada perintah di project ini.</p>';
   return `<ul class="kai-feed">${list.map((x) => {
     const time = new Date(x.createdAt).toLocaleString('id-ID', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
-    return `<li><span><b>${esc(commandStatus(x))}</b><small>${esc(time)}</small><p>${esc(x.text)}</p></span></li>`;
+    return `<li><span><b>${esc(commandStatus(x))}</b><small> · ${esc(time)}</small><p>${esc(x.text)}</p></span></li>`;
   }).join('')}</ul>`;
 }
 

@@ -1,10 +1,10 @@
 import { api, DEMO, LEVELS, LEVEL_LABEL, buildPerms, acceptImports } from './api.js?v=45';
 import { viewWork } from './work.js?v=45';
 import { viewCrm } from './crm.js?v=42';
-import { viewAiOffice, addFixReport } from './ai-office.js?v=55';
+import { viewAiOffice, addFixReport } from './ai-office.js?v=56';
 
 // Satu nomor versi untuk semua file, supaya browser tidak menyimpan salinan lama.
-const MV = 55;
+const MV = 56;
 const LAZY = {
   setoran: { view: 'viewSetoran', home: 'setoranHomeSummary', css: true },
   hrd:     { view: 'viewHrd',     home: 'hrdHomeSummary',     css: true },
@@ -419,19 +419,21 @@ function openFixSheet() {
   const holder = document.createElement('div');
   holder.id = 'fixRoot';
   holder.innerHTML = `<div class="kai-shade" data-fixclose="1"></div>
-    <aside class="kai-sheet" role="dialog" aria-modal="true" aria-label="Lapor perbaikan">
+    <aside class="kai-sheet fix-sheet" role="dialog" aria-modal="true" aria-label="Lapor perbaikan">
       <header><div><p class="kai-step">Antrean Webo</p><h2>Lapor perbaikan</h2><p class="muted">Contoh. Tersimpan di browser ini saja.</p></div>
       <button type="button" class="iconbtn" data-fixclose="1" aria-label="Tutup">×</button></header>
-      <label class="kai-field">Halaman<input class="inp" id="fixPage" value="${esc(page)}" maxlength="120"></label>
-      <label class="kai-field">Perangkat<input class="inp" id="fixDevice" value="${esc(device)}" maxlength="80"></label>
-      <label class="kai-field">Screenshot<input class="inp" id="fixFile" type="file" accept="image/*"></label>
-      <p class="muted" id="fixFileName">Nama file saja yang disimpan.</p>
-      <label class="kai-field">Catatan<textarea class="inp" id="fixNote" rows="3" maxlength="400" placeholder="Apa yang perlu diperbaiki?"></textarea></label>
-      <fieldset class="kai-field"><legend>Prioritas</legend>
-        <label><input type="radio" name="fixPri" value="Biasa" checked> Biasa</label>
-        <label><input type="radio" name="fixPri" value="Penting"> Penting</label>
-      </fieldset>
-      <button type="button" class="btn btn--primary" id="fixSave">Simpan laporan</button>
+      <div class="fix-body">
+        <label class="kai-field">Halaman<input class="inp" id="fixPage" value="${esc(page)}" maxlength="120"></label>
+        <label class="kai-field">Perangkat<input class="inp" id="fixDevice" value="${esc(device)}" maxlength="80"></label>
+        <label class="kai-field">Screenshot<input class="inp" id="fixFile" type="file" accept="image/*"></label>
+        <p class="muted" id="fixFileName">Nama file saja yang disimpan.</p>
+        <label class="kai-field">Catatan<textarea class="inp" id="fixNote" rows="3" maxlength="400" placeholder="Apa yang perlu diperbaiki?"></textarea></label>
+        <fieldset class="kai-field"><legend>Prioritas</legend>
+          <label><input type="radio" name="fixPri" value="Biasa" checked> Biasa</label>
+          <label><input type="radio" name="fixPri" value="Penting"> Penting</label>
+        </fieldset>
+      </div>
+      <div class="fix-save"><button type="button" class="btn btn--primary" id="fixSave">Simpan laporan</button></div>
     </aside>`;
   document.body.appendChild(holder);
   const file = holder.querySelector('#fixFile');
